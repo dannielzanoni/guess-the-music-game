@@ -1,0 +1,140 @@
+.home-page {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 104px 20px 40px;
+}
+
+.game-home {
+  width: min(720px, 100%);
+  text-align: center;
+}
+
+.game-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-accent);
+  background: var(--color-surface);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-home h1 {
+  margin: 24px 0 14px;
+  color: var(--color-title);
+  font-size: clamp(2.8rem, 7vw, 5.4rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.game-subtitle {
+  max-width: 560px;
+  margin: 0 auto 36px;
+  color: var(--color-muted);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+}
+
+.search-panel {
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.search-panel input {
+  width: 100%;
+  min-height: 62px;
+  padding: 0 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-title);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+  font: inherit;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.search-panel input::placeholder {
+  color: var(--color-muted);
+}
+
+.search-panel input:hover,
+.search-panel input:focus {
+  border-color: var(--color-accent);
+  box-shadow:
+    var(--shadow-panel),
+    0 0 0 4px rgba(30, 215, 96, 0.12);
+}
+
+.autocomplete {
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-strong);
+  backdrop-filter: blur(18px);
+}
+
+.suggestion {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--color-title);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.suggestion:last-child {
+  border-bottom: 0;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  background: rgba(30, 215, 96, 0.14);
+  outline: none;
+}
+
+.suggestion-tag {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 18px;
+  color: var(--color-muted);
+}
+
+@media (max-width: 520px) {
+  .home-page {
+    padding: 92px 16px 28px;
+    align-items: start;
+  }
+
+  .game-home {
+    padding-top: 44px;
+  }
+
+  .search-panel input {
+    min-height: 56px;
+    padding-inline: 16px;
+  }
+}
