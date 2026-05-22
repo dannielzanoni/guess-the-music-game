@@ -54,7 +54,7 @@ function App() {
         onThemeToggle={toggleTheme}
         onVolumeChange={updateVolume}
       />
-      <Home />
+      <Home volume={volume} />
     </div>
   )
 }

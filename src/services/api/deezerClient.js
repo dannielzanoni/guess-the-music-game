@@ -12,7 +12,7 @@ export const deezerClient = axios.create({
   },
 })
 
-const normalizeSearchText = (value) =>
+export const normalizeSearchText = (value) =>
   value
     .toLowerCase()
     .normalize('NFD')
@@ -78,4 +78,28 @@ export async function searchArtists(query, signal) {
   })
 
   return artists.slice(0, 5)
+}
+
+export async function getArtistTopTracks(artist, signal) {
+  const response = await deezerClient.get('/search', {
+    params: { q: artist.name },
+    signal,
+  })
+
+  const normalizedArtistName = normalizeSearchText(artist.name)
+  const tracksById = response.data.data.reduce((tracks, track) => {
+    const isSelectedArtistTrack =
+      track.artist?.id === artist.id ||
+      normalizeSearchText(track.artist?.name ?? '') === normalizedArtistName
+
+    if (!isSelectedArtistTrack || tracks.has(track.id)) return tracks
+
+    tracks.set(track.id, track)
+
+    return tracks
+  }, new Map())
+
+  return Array.from(tracksById.values())
+    .sort((firstTrack, secondTrack) => (secondTrack.rank ?? 0) - (firstTrack.rank ?? 0))
+    .slice(0, 25)
 }

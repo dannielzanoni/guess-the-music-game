@@ -1,26 +1,186 @@
-import { useEffect, useState } from 'react'
-import { searchArtists } from '../../services/api/deezerClient'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  getArtistTopTracks,
+  normalizeSearchText,
+  searchArtists,
+} from '../../services/api/deezerClient'
 import './Home.css'
 
-export function Home() {
+const MAX_ATTEMPTS = 5
+
+const getRandomTrack = (tracks) => tracks[Math.floor(Math.random() * tracks.length)]
+
+const getTrackTitle = (track) => track.title_short || track.title
+
+export function Home({ volume }) {
+  const audioRef = useRef(null)
+  const playTimeoutRef = useRef(null)
+
   const [artist, setArtist] = useState('')
   const [artistSuggestions, setArtistSuggestions] = useState([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [suggestionError, setSuggestionError] = useState('')
 
+  const [selectedArtist, setSelectedArtist] = useState(null)
+  const [tracks, setTracks] = useState([])
+  const [roundTrack, setRoundTrack] = useState(null)
+  const [isLoadingTracks, setIsLoadingTracks] = useState(false)
+  const [trackError, setTrackError] = useState('')
+
+  const [guess, setGuess] = useState('')
+  const [isGuessFocused, setIsGuessFocused] = useState(false)
+  const [wrongGuesses, setWrongGuesses] = useState([])
+  const [correctGuess, setCorrectGuess] = useState('')
+  const [isPlaying, setIsPlaying] = useState(false)
+
   const normalizedArtist = artist.trim()
-  const shouldShowAutocomplete = normalizedArtist.length >= 2
+  const isSelectedArtistSearch = selectedArtist?.name === normalizedArtist
+  const shouldShowAutocomplete = normalizedArtist.length >= 2 && !isSelectedArtistSearch
+  const previewDuration = Math.min(1 + wrongGuesses.length, 1 + MAX_ATTEMPTS)
+  const hasFinishedRound = Boolean(correctGuess) || wrongGuesses.length >= MAX_ATTEMPTS
+
+  const guessSuggestions = useMemo(() => {
+    if (!isGuessFocused || hasFinishedRound) return []
+
+    const normalizedGuess = normalizeSearchText(guess.trim())
+
+    return tracks
+      .filter((track) => {
+        if (!normalizedGuess) return true
+
+        return normalizeSearchText(getTrackTitle(track)).includes(normalizedGuess)
+      })
+      .slice(0, 5)
+  }, [guess, hasFinishedRound, isGuessFocused, tracks])
+
+  const stopPreview = () => {
+    window.clearTimeout(playTimeoutRef.current)
+
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+
+    setIsPlaying(false)
+  }
+
+  const startNewSong = (availableTracks = tracks) => {
+    stopPreview()
+    setRoundTrack(getRandomTrack(availableTracks))
+    setGuess('')
+    setWrongGuesses([])
+    setCorrectGuess('')
+    setIsGuessFocused(false)
+  }
 
   const handleArtistChange = (event) => {
     const nextArtist = event.target.value
 
     setArtist(nextArtist)
 
+    if (selectedArtist && nextArtist.trim() !== selectedArtist.name) {
+      stopPreview()
+      setSelectedArtist(null)
+      setTracks([])
+      setRoundTrack(null)
+      setTrackError('')
+      setGuess('')
+      setWrongGuesses([])
+      setCorrectGuess('')
+    }
+
     if (nextArtist.trim().length < 2) {
       setArtistSuggestions([])
       setSuggestionError('')
       setIsLoadingSuggestions(false)
     }
+  }
+
+  const handleArtistSelect = async (selectedSuggestion) => {
+    const controller = new AbortController()
+
+    setArtist(selectedSuggestion.name)
+    setArtistSuggestions([])
+    setSelectedArtist(selectedSuggestion)
+    setTracks([])
+    setRoundTrack(null)
+    setTrackError('')
+    setIsLoadingTracks(true)
+    setWrongGuesses([])
+    setCorrectGuess('')
+    setGuess('')
+    stopPreview()
+
+    try {
+      const artistTracks = await getArtistTopTracks(selectedSuggestion, controller.signal)
+      const playableTracks = artistTracks.filter((track) => track.preview)
+
+      setTracks(playableTracks)
+
+      if (playableTracks.length > 0) {
+        setRoundTrack(getRandomTrack(playableTracks))
+      } else {
+        setTrackError('No playable previews found for this artist')
+      }
+    } catch (error) {
+      if (error.name !== 'CanceledError') {
+        setTrackError('Could not load songs for this artist')
+      }
+    } finally {
+      setIsLoadingTracks(false)
+    }
+  }
+
+  const playPreview = async () => {
+    if (!audioRef.current || !roundTrack?.preview) return
+
+    stopPreview()
+
+    audioRef.current.volume = volume / 100
+    audioRef.current.currentTime = 0
+
+    try {
+      await audioRef.current.play()
+      setIsPlaying(true)
+
+      playTimeoutRef.current = window.setTimeout(() => {
+        stopPreview()
+      }, previewDuration * 1000)
+    } catch {
+      setIsPlaying(false)
+    }
+  }
+
+  const handlePreviewTimeUpdate = () => {
+    if (!audioRef.current) return
+
+    if (audioRef.current.currentTime >= previewDuration) {
+      stopPreview()
+    }
+  }
+
+  const handleGuessSubmit = (event) => {
+    event.preventDefault()
+
+    if (!roundTrack || hasFinishedRound || !guess.trim()) return
+
+    const normalizedGuess = normalizeSearchText(guess.trim())
+    const normalizedTrackTitle = normalizeSearchText(roundTrack.title)
+    const normalizedShortTitle = normalizeSearchText(getTrackTitle(roundTrack))
+    const isCorrectGuess =
+      normalizedGuess === normalizedTrackTitle || normalizedGuess === normalizedShortTitle
+
+    if (isCorrectGuess) {
+      setCorrectGuess(getTrackTitle(roundTrack))
+      setIsGuessFocused(false)
+      stopPreview()
+      return
+    }
+
+    setWrongGuesses((currentGuesses) =>
+      [...currentGuesses, guess.trim()].slice(0, MAX_ATTEMPTS),
+    )
+    setGuess('')
   }
 
   useEffect(() => {
@@ -53,6 +213,21 @@ export function Home() {
       window.clearTimeout(debounceId)
     }
   }, [normalizedArtist, shouldShowAutocomplete])
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100
+    }
+  }, [volume])
+
+  useEffect(() => {
+    if (!audioRef.current) return
+
+    stopPreview()
+    audioRef.current.load()
+  }, [roundTrack])
+
+  useEffect(() => () => stopPreview(), [])
 
   return (
     <main className="home-page">
@@ -88,7 +263,7 @@ export function Home() {
                     className="suggestion"
                     key={suggestion.id}
                     type="button"
-                    onClick={() => setArtist(suggestion.name)}
+                    onClick={() => handleArtistSelect(suggestion)}
                   >
                     <span className="suggestion-main">
                       {suggestion.picture_small && (
@@ -113,6 +288,117 @@ export function Home() {
           )}
         </div>
       </section>
+
+      {selectedArtist && (
+        <section className="round-panel" aria-label="Guess the selected song">
+          <div className="artist-card">
+            <img
+              src={selectedArtist.picture_big || selectedArtist.picture_medium}
+              alt={selectedArtist.name}
+            />
+            <h2>{selectedArtist.name}</h2>
+
+            <div className="attempt-list" aria-live="polite">
+              {wrongGuesses.map((wrongGuess, index) => (
+                <span className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
+                  {wrongGuess}
+                </span>
+              ))}
+
+              {correctGuess && (
+                <span className="attempt-label is-correct">{correctGuess}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="song-card">
+            {isLoadingTracks && <div className="empty-state">Loading songs...</div>}
+            {!isLoadingTracks && trackError && (
+              <div className="empty-state">{trackError}</div>
+            )}
+
+            {!isLoadingTracks && roundTrack && (
+              <>
+                <div className="song-status">
+                  <span>Preview unlocked</span>
+                  <strong>{previewDuration}s</strong>
+                </div>
+
+                <audio
+                  ref={audioRef}
+                  src={roundTrack.preview}
+                  onEnded={() => setIsPlaying(false)}
+                  onTimeUpdate={handlePreviewTimeUpdate}
+                  preload="auto"
+                />
+
+                <button className="play-button" type="button" onClick={playPreview}>
+                  {isPlaying ? 'Playing...' : `Play ${previewDuration}s Preview`}
+                </button>
+
+                <form className="guess-form" onSubmit={handleGuessSubmit}>
+                  <label className="sr-only" htmlFor="song-guess">
+                    Guess the song
+                  </label>
+                  <input
+                    id="song-guess"
+                    value={guess}
+                    disabled={hasFinishedRound}
+                    onBlur={() => window.setTimeout(() => setIsGuessFocused(false), 120)}
+                    onChange={(event) => setGuess(event.target.value)}
+                    onFocus={() => setIsGuessFocused(true)}
+                    placeholder="Guess the song"
+                    type="search"
+                    autoComplete="off"
+                  />
+                  <button disabled={hasFinishedRound || !guess.trim()} type="submit">
+                    Guess
+                  </button>
+
+                  {guessSuggestions.length > 0 && (
+                    <div className="song-autocomplete" aria-label="Song suggestions">
+                      {guessSuggestions.map((track) => (
+                        <button
+                          key={track.id}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => setGuess(getTrackTitle(track))}
+                        >
+                          {getTrackTitle(track)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </form>
+
+                <p className="attempt-counter">
+                  {wrongGuesses.length}/{MAX_ATTEMPTS} attempts used
+                </p>
+
+                {wrongGuesses.length >= MAX_ATTEMPTS && !correctGuess && (
+                  <p className="round-message is-wrong">
+                    The song was {getTrackTitle(roundTrack)}
+                  </p>
+                )}
+
+                {correctGuess && (
+                  <p className="round-message is-correct">Correct answer</p>
+                )}
+
+                {hasFinishedRound && (
+                  <button
+                    className="new-song-button"
+                    type="button"
+                    onClick={() => startNewSong()}
+                  >
+                    New Song
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
     </main>
   )
 }

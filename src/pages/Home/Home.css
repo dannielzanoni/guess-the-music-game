@@ -1,13 +1,213 @@
 .home-page {
-  min-height: 30svh;
-  display: grid;
-  place-items: center;
-  padding: 104px 20px 40px;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 112px 20px 32px;
+  overflow: hidden;
 }
 
 .game-home {
   width: min(720px, 100%);
+  margin: 0;
   text-align: center;
+}
+
+.round-panel {
+  width: min(920px, 100%);
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 22px;
+  margin: 32px auto 0;
+}
+
+.artist-card,
+.song-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-panel);
+}
+
+.artist-card {
+  padding: 18px;
+  text-align: left;
+}
+
+.artist-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.artist-card h2 {
+  margin: 16px 0 12px;
+  color: var(--color-title);
+  font-size: 1.35rem;
+}
+
+.attempt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attempt-label {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.attempt-label.is-wrong,
+.round-message.is-wrong {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.attempt-label.is-correct,
+.round-message.is-correct {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.song-card {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+}
+
+.song-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  color: var(--color-muted);
+}
+
+.song-status strong {
+  color: var(--color-accent);
+  font-size: 1.8rem;
+}
+
+.play-button,
+.guess-form button,
+.new-song-button {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: #101114;
+  background: var(--color-accent);
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.play-button:hover,
+.guess-form button:hover,
+.new-song-button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.play-button {
+  width: 100%;
+}
+
+.guess-form {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.guess-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-title);
+  background: var(--color-surface);
+  outline: none;
+}
+
+.guess-form input:hover,
+.guess-form input:focus {
+  border-color: var(--color-accent);
+}
+
+.guess-form button:disabled,
+.guess-form input:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  opacity: 0.6;
+}
+
+.song-autocomplete {
+  position: absolute;
+  z-index: 9;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 120px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-strong);
+  backdrop-filter: blur(18px);
+}
+
+.song-autocomplete button {
+  width: 100%;
+  min-height: 44px;
+  display: block;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--color-title);
+  background: transparent;
+  text-align: left;
+}
+
+.song-autocomplete button:last-child {
+  border-bottom: 0;
+}
+
+.song-autocomplete button:hover {
+  background: rgba(30, 215, 96, 0.14);
+}
+
+.attempt-counter {
+  margin: 14px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.round-message {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin: 16px 0 0;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.new-song-button {
+  align-self: flex-start;
+  margin-top: 14px;
+  padding: 0 18px;
 }
 
 .game-kicker {
@@ -26,16 +226,16 @@
 }
 
 .game-home h1 {
-  margin: 24px 0 14px;
+  margin: 18px 0 12px;
   color: var(--color-title);
-  font-size: clamp(2.8rem, 7vw, 5.4rem);
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
   line-height: 0.95;
   letter-spacing: 0;
 }
 
 .game-subtitle {
   max-width: 560px;
-  margin: 0 auto 36px;
+  margin: 0 auto 28px;
   color: var(--color-muted);
   font-size: clamp(1rem, 2vw, 1.15rem);
 }
@@ -152,16 +352,30 @@
 
 @media (max-width: 520px) {
   .home-page {
-    padding: 92px 16px 28px;
-    align-items: start;
+    min-height: 100svh;
+    height: auto;
+    padding: 88px 16px 28px;
+    overflow-y: auto;
   }
 
   .game-home {
-    padding-top: 44px;
+    padding-top: 0;
   }
 
   .search-panel input {
     min-height: 56px;
     padding-inline: 16px;
+  }
+
+  .round-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .guess-form {
+    grid-template-columns: 1fr;
+  }
+
+  .song-autocomplete {
+    right: 0;
   }
 }
