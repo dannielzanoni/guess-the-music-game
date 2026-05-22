@@ -1,23 +1,58 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { searchArtists } from '../../services/api/deezerClient'
 import './Home.css'
-
-const previewSuggestions = [
-  'Daft Punk',
-  'Arctic Monkeys',
-  'Beyonce',
-  'The Weeknd',
-]
 
 export function Home() {
   const [artist, setArtist] = useState('')
+  const [artistSuggestions, setArtistSuggestions] = useState([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [suggestionError, setSuggestionError] = useState('')
 
-  const visibleSuggestions = useMemo(() => {
-    if (!artist.trim()) return previewSuggestions
+  const normalizedArtist = artist.trim()
+  const shouldShowAutocomplete = normalizedArtist.length >= 2
 
-    return previewSuggestions.filter((suggestion) =>
-      suggestion.toLowerCase().includes(artist.toLowerCase()),
-    )
-  }, [artist])
+  const handleArtistChange = (event) => {
+    const nextArtist = event.target.value
+
+    setArtist(nextArtist)
+
+    if (nextArtist.trim().length < 2) {
+      setArtistSuggestions([])
+      setSuggestionError('')
+      setIsLoadingSuggestions(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!shouldShowAutocomplete) {
+      return undefined
+    }
+
+    const controller = new AbortController()
+    const debounceId = window.setTimeout(async () => {
+      try {
+        setIsLoadingSuggestions(true)
+        setSuggestionError('')
+
+        const artists = await searchArtists(normalizedArtist, controller.signal)
+        setArtistSuggestions(artists)
+      } catch (error) {
+        if (controller.signal.aborted || error.name === 'CanceledError') return
+
+        setArtistSuggestions([])
+        setSuggestionError('Could not load artists right now')
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingSuggestions(false)
+        }
+      }
+    }, 350)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(debounceId)
+    }
+  }, [normalizedArtist, shouldShowAutocomplete])
 
   return (
     <main className="home-page">
@@ -35,29 +70,47 @@ export function Home() {
           <input
             id="artist-search"
             value={artist}
-            onChange={(event) => setArtist(event.target.value)}
-            placeholder="Type a band/Artist"
+            onChange={handleArtistChange}
+            placeholder="Type a Band/Artist"
             type="search"
             autoComplete="off"
           />
 
-          <div className="autocomplete" aria-label="Artist suggestions">
-            {visibleSuggestions.length > 0 ? (
-              visibleSuggestions.map((suggestion) => (
-                <button
-                  className="suggestion"
-                  key={suggestion}
-                  type="button"
-                  onClick={() => setArtist(suggestion)}
-                >
-                  <span>{suggestion}</span>
-                  <span className="suggestion-tag">Artist</span>
-                </button>
-              ))
-            ) : (
-              <div className="empty-state">No preview matches yet</div>
-            )}
-          </div>
+          {shouldShowAutocomplete && (
+            <div className="autocomplete" aria-label="Artist suggestions">
+              {isLoadingSuggestions && (
+                <div className="empty-state">Searching artists...</div>
+              )}
+
+              {!isLoadingSuggestions &&
+                artistSuggestions.map((suggestion) => (
+                  <button
+                    className="suggestion"
+                    key={suggestion.id}
+                    type="button"
+                    onClick={() => setArtist(suggestion.name)}
+                  >
+                    <span className="suggestion-main">
+                      {suggestion.picture_small && (
+                        <img src={suggestion.picture_small} alt="" />
+                      )}
+                      <span>{suggestion.name}</span>
+                    </span>
+                    <span className="suggestion-tag">Artist</span>
+                  </button>
+                ))}
+
+              {!isLoadingSuggestions &&
+                !suggestionError &&
+                artistSuggestions.length === 0 && (
+                  <div className="empty-state">No artists found</div>
+                )}
+
+              {!isLoadingSuggestions && suggestionError && (
+                <div className="empty-state">{suggestionError}</div>
+              )}
+            </div>
+          )}
         </div>
       </section>
     </main>
