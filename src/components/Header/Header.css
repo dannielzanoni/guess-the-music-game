@@ -36,6 +36,12 @@
   letter-spacing: 0;
 }
 
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
 .icon-button,
 .close-button {
   border: 1px solid var(--color-border);

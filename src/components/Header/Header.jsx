@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import gtmIcon from '../../assets/icons/icon-gtm.png'
 import './Header.css'
 
 export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
@@ -11,8 +12,10 @@ export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
       <header className="app-header">
         <a className="brand" href="/" aria-label="Guess the Music home">
           <span className="brand-mark" aria-hidden="true">
-            GT
+            GTM
+            <img className="brand-icon" src={gtmIcon} alt="" aria-hidden="true" style={{ width: '20px', height: '20px', marginTop: '-7px' }} />
           </span>
+          
           <span>Guess the Music</span>
         </a>
 

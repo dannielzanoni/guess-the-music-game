@@ -98,7 +98,7 @@
 }
 
 .play-button,
-.guess-form button,
+.extra-second-button,
 .new-song-button {
   min-height: 46px;
   border: 1px solid var(--color-border);
@@ -113,7 +113,7 @@
 }
 
 .play-button:hover,
-.guess-form button:hover,
+.extra-second-button:hover,
 .new-song-button:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
@@ -147,8 +147,8 @@
   border-color: var(--color-accent);
 }
 
-.guess-form button:disabled,
-.guess-form input:disabled {
+.guess-form input:disabled,
+.extra-second-button:disabled {
   cursor: not-allowed;
   filter: grayscale(0.8);
   opacity: 0.6;
@@ -193,6 +193,14 @@
   font-size: 0.9rem;
 }
 
+.extra-second-button {
+  align-self: stretch;
+  margin-top: 0;
+  padding: 0 18px;
+  color: var(--color-title);
+  background: var(--color-surface);
+}
+
 .round-message {
   min-height: 36px;
   display: inline-flex;
@@ -234,7 +242,7 @@
 }
 
 .game-subtitle {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto 28px;
   color: var(--color-muted);
   font-size: clamp(1rem, 2vw, 1.15rem);
