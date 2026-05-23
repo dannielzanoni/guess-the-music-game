@@ -97,6 +97,19 @@
   font-size: 1.8rem;
 }
 
+.preview-waveform {
+  min-width: 0;
+  flex: 1;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 4px 10px;
+}
+
 .play-button,
 .extra-second-button,
 .new-song-button {
@@ -385,5 +398,11 @@
 
   .song-autocomplete {
     right: 0;
+  }
+
+  .song-status {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
   }
 }

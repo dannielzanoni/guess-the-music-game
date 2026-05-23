@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import confetti from '@hiseb/confetti'
+import { AudioWaveform } from '../../components/AudioWaveform/AudioWaveform'
 import {
   getArtistTopTracks,
   normalizeSearchText,
@@ -37,6 +38,8 @@ export function Home({ volume }) {
   const [extraSecondRequests, setExtraSecondRequests] = useState([])
   const [correctGuess, setCorrectGuess] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
+  const [previewCurrentTime, setPreviewCurrentTime] = useState(0)
+  const [waveformResetKey, setWaveformResetKey] = useState(0)
 
   const normalizedArtist = artist.trim()
   const isSelectedArtistSearch = selectedArtist?.name === normalizedArtist
@@ -67,6 +70,7 @@ export function Home({ volume }) {
       audioRef.current.currentTime = 0
     }
 
+    setPreviewCurrentTime(0)
     setIsPlaying(false)
   }
 
@@ -147,6 +151,8 @@ export function Home({ volume }) {
 
     audioRef.current.volume = volume / 100
     audioRef.current.currentTime = 0
+    setPreviewCurrentTime(0)
+    setWaveformResetKey((currentKey) => currentKey + 1)
 
     try {
       await audioRef.current.play()
@@ -162,6 +168,8 @@ export function Home({ volume }) {
 
   const handlePreviewTimeUpdate = () => {
     if (!audioRef.current) return
+
+    setPreviewCurrentTime(audioRef.current.currentTime)
 
     if (audioRef.current.currentTime >= previewDuration) {
       stopPreview()
@@ -295,6 +303,25 @@ export function Home({ volume }) {
     audioRef.current.load()
   }, [roundTrack])
 
+  useEffect(() => {
+    const handleWaveformAbort = (event) => {
+      const reason = event.reason
+      const isWaveformAbort =
+        reason?.name === 'AbortError' &&
+        reason?.message === 'signal is aborted without reason'
+
+      if (isWaveformAbort) {
+        event.preventDefault()
+      }
+    }
+
+    window.addEventListener('unhandledrejection', handleWaveformAbort)
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleWaveformAbort)
+    }
+  }, [])
+
   useEffect(() => () => stopPreview(), [])
 
   return (
@@ -390,6 +417,14 @@ export function Home({ volume }) {
               <>
                 <div className="song-status">
                   <strong>{previewDuration}s</strong>
+                  <div className="preview-waveform" aria-hidden="true">
+                    <AudioWaveform
+                      audioUrl={roundTrack.preview}
+                      currentTime={previewCurrentTime}
+                      previewDuration={previewDuration}
+                      resetKey={waveformResetKey}
+                    />
+                  </div>
                 </div>
 
                 <audio

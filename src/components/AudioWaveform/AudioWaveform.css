@@ -1,0 +1,66 @@
+.audio-waveform {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  overflow: hidden;
+}
+
+.audio-waveform-container {
+  width: 100%;
+  height: 48px;
+}
+
+.audio-waveform wave {
+  overflow: hidden;
+}
+
+.audio-waveform-loading {
+  position: absolute;
+  inset: 8px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(167, 173, 183, 0.2);
+}
+
+.audio-waveform-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(167, 173, 183, 0.3),
+    transparent
+  );
+  animation: waveform-loading 1.1s linear infinite;
+  transform: translateX(-100%);
+}
+
+.audio-waveform-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.audio-waveform-fallback span {
+  width: 3px;
+  max-height: 42px;
+  border-radius: 999px;
+  background: rgba(167, 173, 183, 0.5);
+  transition: background 120ms ease;
+}
+
+.audio-waveform-fallback span.is-active {
+  background: var(--color-accent);
+}
+
+@keyframes waveform-loading {
+  to {
+    transform: translateX(100%);
+  }
+}

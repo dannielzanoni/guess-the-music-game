@@ -13,6 +13,7 @@
     "@hiseb/confetti": "^2.1.0",
     "axios": "^1.16.1",
     "react": "^19.2.6",
+    "react-audio-wave-modern": "^0.4.1",
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
