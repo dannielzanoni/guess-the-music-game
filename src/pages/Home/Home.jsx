@@ -30,14 +30,16 @@ export function Home({ volume }) {
   const [guess, setGuess] = useState('')
   const [isGuessFocused, setIsGuessFocused] = useState(false)
   const [wrongGuesses, setWrongGuesses] = useState([])
+  const [extraSecondRequests, setExtraSecondRequests] = useState([])
   const [correctGuess, setCorrectGuess] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
 
   const normalizedArtist = artist.trim()
   const isSelectedArtistSearch = selectedArtist?.name === normalizedArtist
   const shouldShowAutocomplete = normalizedArtist.length >= 2 && !isSelectedArtistSearch
-  const previewDuration = Math.min(1 + wrongGuesses.length, 1 + MAX_ATTEMPTS)
-  const hasFinishedRound = Boolean(correctGuess) || wrongGuesses.length >= MAX_ATTEMPTS
+  const attemptsUsed = wrongGuesses.length + extraSecondRequests.length
+  const previewDuration = Math.min(1 + attemptsUsed, 1 + MAX_ATTEMPTS)
+  const hasFinishedRound = Boolean(correctGuess) || attemptsUsed >= MAX_ATTEMPTS
 
   const guessSuggestions = useMemo(() => {
     if (!isGuessFocused || hasFinishedRound) return []
@@ -69,6 +71,7 @@ export function Home({ volume }) {
     setRoundTrack(getRandomTrack(availableTracks))
     setGuess('')
     setWrongGuesses([])
+    setExtraSecondRequests([])
     setCorrectGuess('')
     setIsGuessFocused(false)
   }
@@ -86,6 +89,7 @@ export function Home({ volume }) {
       setTrackError('')
       setGuess('')
       setWrongGuesses([])
+      setExtraSecondRequests([])
       setCorrectGuess('')
     }
 
@@ -107,6 +111,7 @@ export function Home({ volume }) {
     setTrackError('')
     setIsLoadingTracks(true)
     setWrongGuesses([])
+    setExtraSecondRequests([])
     setCorrectGuess('')
     setGuess('')
     stopPreview()
@@ -159,12 +164,10 @@ export function Home({ volume }) {
     }
   }
 
-  const handleGuessSubmit = (event) => {
-    event.preventDefault()
+  const validateGuess = (nextGuess) => {
+    if (!roundTrack || hasFinishedRound || !nextGuess.trim()) return
 
-    if (!roundTrack || hasFinishedRound || !guess.trim()) return
-
-    const normalizedGuess = normalizeSearchText(guess.trim())
+    const normalizedGuess = normalizeSearchText(nextGuess.trim())
     const normalizedTrackTitle = normalizeSearchText(roundTrack.title)
     const normalizedShortTitle = normalizeSearchText(getTrackTitle(roundTrack))
     const isCorrectGuess =
@@ -178,9 +181,19 @@ export function Home({ volume }) {
     }
 
     setWrongGuesses((currentGuesses) =>
-      [...currentGuesses, guess.trim()].slice(0, MAX_ATTEMPTS),
+      [...currentGuesses, nextGuess.trim()].slice(0, MAX_ATTEMPTS),
     )
     setGuess('')
+  }
+
+  const handleExtraSecondRequest = () => {
+    if (hasFinishedRound) return
+
+    stopPreview()
+    setExtraSecondRequests((currentRequests) => [
+      ...currentRequests,
+      currentRequests.length + 1,
+    ])
   }
 
   useEffect(() => {
@@ -232,7 +245,6 @@ export function Home({ volume }) {
   return (
     <main className="home-page">
       <section className="game-home" aria-labelledby="game-title">
-        <div className="game-kicker">Music quiz</div>
         <h1 id="game-title">Guess the Music</h1>
         <p className="game-subtitle">
           Search for a band or artist to start a round and test your music memory.
@@ -320,7 +332,6 @@ export function Home({ volume }) {
             {!isLoadingTracks && roundTrack && (
               <>
                 <div className="song-status">
-                  <span>Preview unlocked</span>
                   <strong>{previewDuration}s</strong>
                 </div>
 
@@ -336,7 +347,7 @@ export function Home({ volume }) {
                   {isPlaying ? 'Playing...' : `Play ${previewDuration}s Preview`}
                 </button>
 
-                <form className="guess-form" onSubmit={handleGuessSubmit}>
+                <div className="guess-form">
                   <label className="sr-only" htmlFor="song-guess">
                     Guess the song
                   </label>
@@ -351,8 +362,13 @@ export function Home({ volume }) {
                     type="search"
                     autoComplete="off"
                   />
-                  <button disabled={hasFinishedRound || !guess.trim()} type="submit">
-                    Guess
+                  <button
+                    className="extra-second-button"
+                    disabled={hasFinishedRound}
+                    type="button"
+                    onClick={handleExtraSecondRequest}
+                  >
+                    +1s
                   </button>
 
                   {guessSuggestions.length > 0 && (
@@ -362,20 +378,20 @@ export function Home({ volume }) {
                           key={track.id}
                           type="button"
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => setGuess(getTrackTitle(track))}
+                          onClick={() => validateGuess(getTrackTitle(track))}
                         >
                           {getTrackTitle(track)}
                         </button>
                       ))}
                     </div>
                   )}
-                </form>
+                </div>
 
                 <p className="attempt-counter">
-                  {wrongGuesses.length}/{MAX_ATTEMPTS} attempts used
+                  {attemptsUsed}/{MAX_ATTEMPTS} attempts used
                 </p>
 
-                {wrongGuesses.length >= MAX_ATTEMPTS && !correctGuess && (
+                {attemptsUsed >= MAX_ATTEMPTS && !correctGuess && (
                   <p className="round-message is-wrong">
                     The song was {getTrackTitle(roundTrack)}
                   </p>
