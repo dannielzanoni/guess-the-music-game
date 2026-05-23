@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import confetti from '@hiseb/confetti'
 import {
   getArtistTopTracks,
   normalizeSearchText,
   searchArtists,
 } from '../../services/api/deezerClient'
+import tadaSound from '../../assets/sounds/tada_sound.mp3'
 import './Home.css'
 
 const MAX_ATTEMPTS = 5
@@ -14,7 +16,9 @@ const getTrackTitle = (track) => track.title_short || track.title
 
 export function Home({ volume }) {
   const audioRef = useRef(null)
+  const successAudioRef = useRef(null)
   const playTimeoutRef = useRef(null)
+  const lastCelebratedGuessRef = useRef('')
 
   const [artist, setArtist] = useState('')
   const [artistSuggestions, setArtistSuggestions] = useState([])
@@ -164,6 +168,40 @@ export function Home({ volume }) {
     }
   }
 
+  const playCorrectAnswerFeedback = () => {
+    const centerPosition = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight * 0.28,
+    }
+
+    confetti({
+      position: centerPosition,
+      count: 140,
+      size: 1.2,
+      velocity: 280,
+      fade: true,
+    })
+
+    window.setTimeout(() => {
+      confetti({
+        position: centerPosition,
+        count: 90,
+        size: 1,
+        velocity: 220,
+        fade: true,
+      })
+    }, 180)
+
+    if (!successAudioRef.current) return
+
+    successAudioRef.current.pause()
+    successAudioRef.current.currentTime = 0
+    successAudioRef.current.volume = Math.max(volume / 100, 0.2)
+    successAudioRef.current.play().catch((error) => {
+      console.warn('Could not play success sound', error)
+    })
+  }
+
   const validateGuess = (nextGuess) => {
     if (!roundTrack || hasFinishedRound || !nextGuess.trim()) return
 
@@ -177,6 +215,7 @@ export function Home({ volume }) {
       setCorrectGuess(getTrackTitle(roundTrack))
       setIsGuessFocused(false)
       stopPreview()
+      playCorrectAnswerFeedback()
       return
     }
 
@@ -231,7 +270,23 @@ export function Home({ volume }) {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100
     }
+
+    if (successAudioRef.current) {
+      successAudioRef.current.volume = Math.max(volume / 100, 0.2)
+    }
   }, [volume])
+
+  useEffect(() => {
+    if (!correctGuess || lastCelebratedGuessRef.current === correctGuess) return
+
+    lastCelebratedGuessRef.current = correctGuess
+    confetti({
+      count: 80,
+      size: 1,
+      velocity: 200,
+      fade: true,
+    })
+  }, [correctGuess])
 
   useEffect(() => {
     if (!audioRef.current) return
@@ -244,6 +299,8 @@ export function Home({ volume }) {
 
   return (
     <main className="home-page">
+      <audio ref={successAudioRef} src={tadaSound} preload="auto" />
+
       <section className="game-home" aria-labelledby="game-title">
         <h1 id="game-title">Guess the Music</h1>
         <p className="game-subtitle">

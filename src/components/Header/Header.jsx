@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import gtmIcon from '../../assets/icons/icon-gtm.png'
 import './Header.css'
 
 export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const settingsButtonRef = useRef(null)
+  const settingsDrawerRef = useRef(null)
 
-  const closeSettings = () => setIsSettingsOpen(false)
+  const closeSettings = () => {
+    if (settingsDrawerRef.current?.contains(document.activeElement)) {
+      settingsButtonRef.current?.focus()
+    }
+
+    setIsSettingsOpen(false)
+  }
 
   return (
     <>
@@ -22,6 +30,7 @@ export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
         <button
           className="icon-button"
           type="button"
+          ref={settingsButtonRef}
           aria-label="Open settings"
           aria-expanded={isSettingsOpen}
           onClick={() => setIsSettingsOpen(true)}
@@ -45,9 +54,10 @@ export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
       />
 
       <aside
+        ref={settingsDrawerRef}
         className={`settings-drawer ${isSettingsOpen ? 'is-open' : ''}`}
         aria-label="Application settings"
-        aria-hidden={!isSettingsOpen}
+        inert={!isSettingsOpen}
       >
         <div className="drawer-header">
           <div>
