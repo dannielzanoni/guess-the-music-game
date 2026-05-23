@@ -93,8 +93,10 @@
 }
 
 .song-status strong {
+  flex: 0 0 auto;
   color: var(--color-accent);
-  font-size: 1.8rem;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-waveform {

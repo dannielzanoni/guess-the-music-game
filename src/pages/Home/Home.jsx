@@ -15,10 +15,13 @@ const getRandomTrack = (tracks) => tracks[Math.floor(Math.random() * tracks.leng
 
 const getTrackTitle = (track) => track.title_short || track.title
 
+const formatPreviewTime = (seconds) => `${seconds.toFixed(2)}s`
+
 export function Home({ volume }) {
   const audioRef = useRef(null)
   const successAudioRef = useRef(null)
   const playTimeoutRef = useRef(null)
+  const previewAnimationRef = useRef(null)
   const lastCelebratedGuessRef = useRef('')
 
   const [artist, setArtist] = useState('')
@@ -64,6 +67,7 @@ export function Home({ volume }) {
 
   const stopPreview = () => {
     window.clearTimeout(playTimeoutRef.current)
+    window.cancelAnimationFrame(previewAnimationRef.current)
 
     if (audioRef.current) {
       audioRef.current.pause()
@@ -72,6 +76,13 @@ export function Home({ volume }) {
 
     setPreviewCurrentTime(0)
     setIsPlaying(false)
+  }
+
+  const syncPreviewTime = () => {
+    if (!audioRef.current || audioRef.current.paused) return
+
+    setPreviewCurrentTime(audioRef.current.currentTime)
+    previewAnimationRef.current = window.requestAnimationFrame(syncPreviewTime)
   }
 
   const startNewSong = (availableTracks = tracks) => {
@@ -157,6 +168,7 @@ export function Home({ volume }) {
     try {
       await audioRef.current.play()
       setIsPlaying(true)
+      previewAnimationRef.current = window.requestAnimationFrame(syncPreviewTime)
 
       playTimeoutRef.current = window.setTimeout(() => {
         stopPreview()
@@ -168,8 +180,6 @@ export function Home({ volume }) {
 
   const handlePreviewTimeUpdate = () => {
     if (!audioRef.current) return
-
-    setPreviewCurrentTime(audioRef.current.currentTime)
 
     if (audioRef.current.currentTime >= previewDuration) {
       stopPreview()
@@ -416,7 +426,10 @@ export function Home({ volume }) {
             {!isLoadingTracks && roundTrack && (
               <>
                 <div className="song-status">
-                  <strong>{previewDuration}s</strong>
+                  <strong>
+                    {formatPreviewTime(previewCurrentTime)} /{' '}
+                    {formatPreviewTime(previewDuration)}
+                  </strong>
                   <div className="preview-waveform" aria-hidden="true">
                     <AudioWaveform
                       audioUrl={roundTrack.preview}
