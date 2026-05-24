@@ -1,9 +1,10 @@
 .app-root {
-  min-height: 100svh;
+  min-height: 100vh;
   color: var(--color-text);
   background:
     radial-gradient(circle at top left, var(--color-hero-glow), transparent 30%),
     linear-gradient(135deg, var(--color-bg-start), var(--color-bg-mid), var(--color-bg-end));
+  background-attachment: fixed;
 }
 
 .app-root[data-theme='dark'] {

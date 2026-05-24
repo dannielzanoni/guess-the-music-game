@@ -2,30 +2,49 @@ import { useEffect, useRef, useState } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import './AudioWaveform.css'
 
-const fallbackBars = [28, 44, 32, 52, 36, 46, 24, 58, 40, 34, 50, 30, 48, 38]
+const fallbackBars = [
+  22, 38, 28, 50, 34, 44, 18, 56, 42, 26, 48, 32, 54, 24, 36, 46, 30, 52, 20,
+  40, 58, 28, 44, 34, 50, 22, 38, 48, 26, 54, 32, 42,
+]
 
 export function AudioWaveform({ audioUrl, currentTime, previewDuration, resetKey }) {
   const containerRef = useRef(null)
   const waveSurferRef = useRef(null)
   const [isReady, setIsReady] = useState(false)
   const [hasWaveformError, setHasWaveformError] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+
   useEffect(() => {
-    if (!containerRef.current || !audioUrl) return undefined
+    const mediaQuery = window.matchMedia('(max-width: 520px)')
+    const updateViewportMode = () => setIsMobileViewport(mediaQuery.matches)
+
+    updateViewportMode()
+    mediaQuery.addEventListener('change', updateViewportMode)
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateViewportMode)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!containerRef.current || !audioUrl || isMobileViewport) return undefined
 
     setIsReady(false)
     setHasWaveformError(false)
 
     const waveSurfer = WaveSurfer.create({
       container: containerRef.current,
-      height: 48,
+      height: 56,
       waveColor: 'rgba(167, 173, 183, 0.48)',
       progressColor: '#7dffb2',
       cursorWidth: 0,
-      barWidth: 3,
-      barGap: 2,
-      barRadius: 4,
+      barWidth: 2,
+      barGap: 1,
+      barRadius: 3,
       barMinHeight: 2,
+      minPxPerSec: 80,
       normalize: true,
+      fillParent: true,
       interact: false,
       dragToSeek: false,
       backend: 'MediaElement',
@@ -44,7 +63,7 @@ export function AudioWaveform({ audioUrl, currentTime, previewDuration, resetKey
       waveSurfer.destroy()
       waveSurferRef.current = null
     }
-  }, [audioUrl, resetKey])
+  }, [audioUrl, resetKey, isMobileViewport])
 
   useEffect(() => {
     if (!isReady || !waveSurferRef.current) return
@@ -54,13 +73,15 @@ export function AudioWaveform({ audioUrl, currentTime, previewDuration, resetKey
 
   return (
     <div className="audio-waveform">
-      <div className="audio-waveform-container" ref={containerRef} />
+      {!isMobileViewport && (
+        <div className="audio-waveform-container" ref={containerRef} />
+      )}
 
-      {!isReady && !hasWaveformError && (
+      {!isMobileViewport && !isReady && !hasWaveformError && (
         <div className="audio-waveform-loading" aria-hidden="true" />
       )}
 
-      {hasWaveformError && (
+      {(isMobileViewport || hasWaveformError) && (
         <div className="audio-waveform-fallback" aria-hidden="true">
           {fallbackBars.map((height, index) => (
             <span
