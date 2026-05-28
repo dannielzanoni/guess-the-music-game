@@ -53,8 +53,16 @@
   padding: 18px;
 }
 
+.attempt-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 .attempt-box h3 {
-  margin: 0 0 10px;
+  margin: 0;
   color: var(--color-title);
   font-size: 0.95rem;
 }
@@ -242,10 +250,17 @@
   background: rgba(30, 215, 96, 0.14);
 }
 
-.attempt-counter {
-  margin: 14px 0 0;
+.attempt-hearts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #ff5c8a;
+  font-size: 0.95rem;
+}
+
+.attempt-hearts .pi-heart {
   color: var(--color-muted);
-  font-size: 0.9rem;
 }
 
 .extra-second-button {

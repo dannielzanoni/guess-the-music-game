@@ -518,10 +518,6 @@ export function Home({ volume }) {
                   )}
                 </div>
 
-                <p className="attempt-counter">
-                  {attemptsUsed}/{MAX_ATTEMPTS} attempts used
-                </p>
-
                 {shouldForceGuess && (
                   <p className="round-message is-warning">
                     Choose a song for your final attempt
@@ -535,7 +531,7 @@ export function Home({ volume }) {
                 )}
 
                 {correctGuess && (
-                  <p className="round-message is-correct">Correct answer</p>
+                  <p className="round-message is-correct">Correct answer!</p>
                 )}
 
                 {hasFinishedRound && (
@@ -552,7 +548,28 @@ export function Home({ volume }) {
           </div>
 
           <div className="attempt-box">
-            <h3>Attempts</h3>
+            <div className="attempt-box-header">
+              <h3>Attempts</h3>
+              <div
+                className="attempt-hearts"
+                aria-label={`${attemptsUsed}/${MAX_ATTEMPTS} attempts used`}
+                title={`${attemptsUsed}/${MAX_ATTEMPTS} attempts used`}
+              >
+                {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {
+                  const isRemainingAttempt = index < MAX_ATTEMPTS - attemptsUsed
+
+                  return (
+                    <i
+                      className={`pi ${
+                        isRemainingAttempt ? 'pi-heart-fill' : 'pi-heart'
+                      }`}
+                      key={index}
+                      aria-hidden="true"
+                    />
+                  )
+                })}
+              </div>
+            </div>
             <ol className="attempt-list" aria-live="polite">
               {wrongGuesses.map((wrongGuess, index) => (
                 <li className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
