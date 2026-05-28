@@ -67,6 +67,7 @@ export function Home({ volume }) {
   const attemptsUsed = wrongGuesses.length + extraSecondRequests.length
   const previewDuration = Math.min(1 + attemptsUsed, 1 + MAX_ATTEMPTS)
   const hasFinishedRound = Boolean(correctGuess) || attemptsUsed >= MAX_ATTEMPTS
+  const shouldForceGuess = attemptsUsed >= MAX_ATTEMPTS - 1 && !hasFinishedRound
 
   const guessSuggestions = useMemo(() => {
     if (!isGuessFocused || hasFinishedRound) return []
@@ -281,7 +282,7 @@ export function Home({ volume }) {
   }
 
   const handleExtraSecondRequest = () => {
-    if (hasFinishedRound) return
+    if (hasFinishedRound || shouldForceGuess) return
 
     stopPreview()
     setExtraSecondRequests((currentRequests) => [
@@ -494,7 +495,7 @@ export function Home({ volume }) {
                   />
                   <button
                     className="extra-second-button"
-                    disabled={hasFinishedRound}
+                    disabled={hasFinishedRound || shouldForceGuess}
                     type="button"
                     onClick={handleExtraSecondRequest}
                   >
@@ -520,6 +521,12 @@ export function Home({ volume }) {
                 <p className="attempt-counter">
                   {attemptsUsed}/{MAX_ATTEMPTS} attempts used
                 </p>
+
+                {shouldForceGuess && (
+                  <p className="round-message is-warning">
+                    Choose a song for your final attempt
+                  </p>
+                )}
 
                 {attemptsUsed >= MAX_ATTEMPTS && !correctGuess && (
                   <p className="round-message is-wrong">

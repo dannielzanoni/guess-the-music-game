@@ -104,6 +104,11 @@
   background: rgba(52, 211, 153, 0.12);
 }
 
+.round-message.is-warning {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+}
+
 .attempt-empty {
   color: var(--color-muted);
   background: rgba(167, 173, 183, 0.08);
