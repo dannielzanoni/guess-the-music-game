@@ -14,15 +14,16 @@
 }
 
 .round-panel {
-  width: min(920px, 100%);
+  width: min(1180px, 100%);
   display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) minmax(200px, 260px);
   gap: 22px;
   margin: 32px auto 0;
 }
 
 .artist-card,
-.song-card {
+.song-card,
+.attempt-box {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface-strong);
@@ -47,32 +48,66 @@
   font-size: 1.35rem;
 }
 
+.attempt-box {
+  align-self: start;
+  padding: 18px;
+}
+
+.attempt-box h3 {
+  margin: 0 0 10px;
+  color: var(--color-title);
+  font-size: 0.95rem;
+}
+
 .attempt-list {
+  margin: 0;
+  padding-left: 22px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .attempt-label {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 10px;
+  min-height: 34px;
+  padding-left: 2px;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
+.attempt-label span,
+.attempt-empty {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 8px;
+}
+
 .attempt-label.is-wrong,
 .round-message.is-wrong {
   color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.12);
 }
 
 .attempt-label.is-correct,
 .round-message.is-correct {
   color: #34d399;
+}
+
+.attempt-label.is-wrong span,
+.round-message.is-wrong {
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.attempt-label.is-correct span,
+.round-message.is-correct {
   background: rgba(52, 211, 153, 0.12);
+}
+
+.attempt-empty {
+  color: var(--color-muted);
+  background: rgba(167, 173, 183, 0.08);
+  font-size: 0.9rem;
 }
 
 .song-card {

@@ -13,6 +13,22 @@ const MAX_ATTEMPTS = 5
 
 const getRandomTrack = (tracks) => tracks[Math.floor(Math.random() * tracks.length)]
 
+const getAvailableTracks = (tracks, usedTrackIds, currentTrackId) => {
+  const blockedTrackIds = new Set(usedTrackIds)
+
+  if (currentTrackId) {
+    blockedTrackIds.add(currentTrackId)
+  }
+
+  const availableTracks = tracks.filter((track) => !blockedTrackIds.has(track.id))
+
+  if (availableTracks.length > 0) return availableTracks
+
+  const tracksWithoutCurrent = tracks.filter((track) => track.id !== currentTrackId)
+
+  return tracksWithoutCurrent.length > 0 ? tracksWithoutCurrent : tracks
+}
+
 const getTrackTitle = (track) => track.title_short || track.title
 
 const formatPreviewTime = (seconds) => `${seconds.toFixed(2)}s`
@@ -32,6 +48,7 @@ export function Home({ volume }) {
   const [selectedArtist, setSelectedArtist] = useState(null)
   const [tracks, setTracks] = useState([])
   const [roundTrack, setRoundTrack] = useState(null)
+  const [usedTrackIds, setUsedTrackIds] = useState([])
   const [isLoadingTracks, setIsLoadingTracks] = useState(false)
   const [trackError, setTrackError] = useState('')
 
@@ -55,15 +72,19 @@ export function Home({ volume }) {
     if (!isGuessFocused || hasFinishedRound) return []
 
     const normalizedGuess = normalizeSearchText(guess.trim())
+    const guessedTrackNames = new Set(
+      [...wrongGuesses, correctGuess].filter(Boolean).map(normalizeSearchText),
+    )
 
     return tracks
+      .filter((track) => !guessedTrackNames.has(normalizeSearchText(getTrackTitle(track))))
       .filter((track) => {
         if (!normalizedGuess) return true
 
         return normalizeSearchText(getTrackTitle(track)).includes(normalizedGuess)
       })
       .slice(0, 5)
-  }, [guess, hasFinishedRound, isGuessFocused, tracks])
+  }, [correctGuess, guess, hasFinishedRound, isGuessFocused, tracks, wrongGuesses])
 
   const stopPreview = () => {
     window.clearTimeout(playTimeoutRef.current)
@@ -87,7 +108,18 @@ export function Home({ volume }) {
 
   const startNewSong = (availableTracks = tracks) => {
     stopPreview()
-    setRoundTrack(getRandomTrack(availableTracks))
+
+    const completedTrackIds = roundTrack
+      ? [...new Set([...usedTrackIds, roundTrack.id])]
+      : usedTrackIds
+    const nextTrackOptions = getAvailableTracks(
+      availableTracks,
+      completedTrackIds,
+      roundTrack?.id,
+    )
+
+    setUsedTrackIds(completedTrackIds.length >= availableTracks.length ? [] : completedTrackIds)
+    setRoundTrack(getRandomTrack(nextTrackOptions))
     setGuess('')
     setWrongGuesses([])
     setExtraSecondRequests([])
@@ -105,6 +137,7 @@ export function Home({ volume }) {
       setSelectedArtist(null)
       setTracks([])
       setRoundTrack(null)
+      setUsedTrackIds([])
       setTrackError('')
       setGuess('')
       setWrongGuesses([])
@@ -127,6 +160,7 @@ export function Home({ volume }) {
     setSelectedArtist(selectedSuggestion)
     setTracks([])
     setRoundTrack(null)
+    setUsedTrackIds([])
     setTrackError('')
     setIsLoadingTracks(true)
     setWrongGuesses([])
@@ -230,6 +264,9 @@ export function Home({ volume }) {
       normalizedGuess === normalizedTrackTitle || normalizedGuess === normalizedShortTitle
 
     if (isCorrectGuess) {
+      setUsedTrackIds((currentTrackIds) => [
+        ...new Set([...currentTrackIds, roundTrack.id]),
+      ])
       setCorrectGuess(getTrackTitle(roundTrack))
       setIsGuessFocused(false)
       stopPreview()
@@ -403,18 +440,6 @@ export function Home({ volume }) {
               alt={selectedArtist.name}
             />
             <h2>{selectedArtist.name}</h2>
-
-            <div className="attempt-list" aria-live="polite">
-              {wrongGuesses.map((wrongGuess, index) => (
-                <span className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
-                  {wrongGuess}
-                </span>
-              ))}
-
-              {correctGuess && (
-                <span className="attempt-label is-correct">{correctGuess}</span>
-              )}
-            </div>
           </div>
 
           <div className="song-card">
@@ -517,6 +542,27 @@ export function Home({ volume }) {
                 )}
               </>
             )}
+          </div>
+
+          <div className="attempt-box">
+            <h3>Attempts</h3>
+            <ol className="attempt-list" aria-live="polite">
+              {wrongGuesses.map((wrongGuess, index) => (
+                <li className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
+                  <span>{wrongGuess}</span>
+                </li>
+              ))}
+
+              {correctGuess && (
+                <li className="attempt-label is-correct">
+                  <span>{correctGuess}</span>
+                </li>
+              )}
+
+              {wrongGuesses.length === 0 && !correctGuess && (
+                <li className="attempt-empty">No guesses yet</li>
+              )}
+            </ol>
           </div>
         </section>
       )}
