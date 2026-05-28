@@ -596,7 +596,8 @@ export function Home({
 
                 {attemptsUsed >= MAX_ATTEMPTS && !correctGuess && (
                   <p className="round-message is-wrong">
-                    The song was {getTrackTitle(roundTrack)}
+                    The song was  
+                    <strong>: {getTrackTitle(roundTrack)}</strong>
                   </p>
                 )}
 
