@@ -35,11 +35,44 @@
   text-align: left;
 }
 
-.artist-card img {
+.artist-image-frame {
+  position: relative;
+}
+
+.artist-image-frame img {
   width: 100%;
   aspect-ratio: 1;
   border-radius: 8px;
   object-fit: cover;
+}
+
+.favorite-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-title);
+  background: rgba(16, 17, 20, 0.72);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.favorite-toggle:hover,
+.favorite-toggle.is-favorite {
+  border-color: #facc15;
+  color: #facc15;
+}
+
+.favorite-toggle:hover {
+  transform: translateY(-1px);
 }
 
 .artist-card h2 {

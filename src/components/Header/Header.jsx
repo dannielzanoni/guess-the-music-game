@@ -2,7 +2,15 @@ import { useRef, useState } from 'react'
 import gtmIcon from '../../assets/icons/icon-gtm.png'
 import './Header.css'
 
-export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
+export function Header({
+  activePage,
+  favoriteCount,
+  theme,
+  volume,
+  onNavigate,
+  onThemeToggle,
+  onVolumeChange,
+}) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const settingsButtonRef = useRef(null)
   const settingsDrawerRef = useRef(null)
@@ -18,32 +26,48 @@ export function Header({ theme, volume, onThemeToggle, onVolumeChange }) {
   return (
     <>
       <header className="app-header">
-        <a className="brand" href="/" aria-label="Guess the Music home">
+        <button
+          className="brand"
+          type="button"
+          aria-label="Guess the Music home"
+          onClick={() => onNavigate('home')}
+        >
           <span className="brand-mark" aria-hidden="true">
             GTM
-            <img className="brand-icon" src={gtmIcon} alt="" aria-hidden="true" style={{ width: '20px', height: '20px', marginTop: '-7px' }} />
+            <img className="brand-icon" src={gtmIcon} alt="" aria-hidden="true" />
           </span>
-          
           <span>Guess the Music</span>
-        </a>
-
-        <button
-          className="icon-button"
-          type="button"
-          ref={settingsButtonRef}
-          aria-label="Open settings"
-          aria-expanded={isSettingsOpen}
-          onClick={() => setIsSettingsOpen(true)}
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M4 7h10" />
-            <path d="M18 7h2" />
-            <path d="M4 17h2" />
-            <path d="M10 17h10" />
-            <path d="M14 5v4" />
-            <path d="M8 15v4" />
-          </svg>
         </button>
+
+        <nav className="header-actions" aria-label="Main navigation">
+          <button
+            className={`nav-button ${activePage === 'favorites' ? 'is-active' : ''}`}
+            type="button"
+            onClick={() => onNavigate('favorites')}
+          >
+            <i className="pi pi-star-fill" aria-hidden="true" />
+            <span>Favorites</span>
+            {favoriteCount > 0 && <strong>{favoriteCount}</strong>}
+          </button>
+
+          <button
+            className="icon-button"
+            type="button"
+            ref={settingsButtonRef}
+            aria-label="Open settings"
+            aria-expanded={isSettingsOpen}
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 7h10" />
+              <path d="M18 7h2" />
+              <path d="M4 17h2" />
+              <path d="M10 17h10" />
+              <path d="M14 5v4" />
+              <path d="M8 15v4" />
+            </svg>
+          </button>
+        </nav>
       </header>
 
       <button

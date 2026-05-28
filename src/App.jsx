@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Header } from './components/Header/Header'
+import { Favorites } from './pages/Favorites/Favorites'
 import { Home } from './pages/Home/Home'
 import './App.css'
 
 const STORAGE_KEYS = {
   theme: 'guess-the-music:theme',
   volume: 'guess-the-music:volume',
+  favoriteArtists: 'guess-the-music:favorite-artists',
 }
 
 const getStoredTheme = () => {
@@ -26,9 +28,24 @@ const getStoredVolume = () => {
   return Math.min(Math.max(storedVolume, 0), 100)
 }
 
+const getStoredFavoriteArtists = () => {
+  try {
+    const storedFavorites = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.favoriteArtists) ?? '[]',
+    )
+
+    return Array.isArray(storedFavorites) ? storedFavorites : []
+  } catch {
+    return []
+  }
+}
+
 function App() {
   const [theme, setTheme] = useState(getStoredTheme)
   const [volume, setVolume] = useState(getStoredVolume)
+  const [currentPage, setCurrentPage] = useState('home')
+  const [favoriteArtists, setFavoriteArtists] = useState(getStoredFavoriteArtists)
+  const [selectedFavoriteArtist, setSelectedFavoriteArtist] = useState(null)
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
@@ -36,6 +53,35 @@ function App() {
 
   const updateVolume = (nextVolume) => {
     setVolume(Math.min(Math.max(nextVolume, 0), 100))
+  }
+
+  const toggleFavoriteArtist = (artist) => {
+    setFavoriteArtists((currentFavorites) => {
+      const isAlreadyFavorite = currentFavorites.some(
+        (favoriteArtist) => favoriteArtist.id === artist.id,
+      )
+
+      if (isAlreadyFavorite) {
+        return currentFavorites.filter((favoriteArtist) => favoriteArtist.id !== artist.id)
+      }
+
+      return [
+        ...currentFavorites,
+        {
+          id: artist.id,
+          name: artist.name,
+          picture_small: artist.picture_small,
+          picture_medium: artist.picture_medium,
+          picture_big: artist.picture_big,
+          picture_xl: artist.picture_xl,
+        },
+      ]
+    })
+  }
+
+  const openFavoriteArtist = (artist) => {
+    setSelectedFavoriteArtist({ ...artist, selectedAt: Date.now() })
+    setCurrentPage('home')
   }
 
   useEffect(() => {
@@ -46,15 +92,38 @@ function App() {
     localStorage.setItem(STORAGE_KEYS.volume, String(volume))
   }, [volume])
 
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEYS.favoriteArtists,
+      JSON.stringify(favoriteArtists),
+    )
+  }, [favoriteArtists])
+
   return (
     <div className="app-root" data-theme={theme}>
       <Header
+        activePage={currentPage}
+        favoriteCount={favoriteArtists.length}
         theme={theme}
         volume={volume}
+        onNavigate={setCurrentPage}
         onThemeToggle={toggleTheme}
         onVolumeChange={updateVolume}
       />
-      <Home volume={volume} />
+      {currentPage === 'home' ? (
+        <Home
+          favoriteArtists={favoriteArtists}
+          initialArtistQuery={selectedFavoriteArtist}
+          onToggleFavoriteArtist={toggleFavoriteArtist}
+          volume={volume}
+        />
+      ) : (
+        <Favorites
+          favoriteArtists={favoriteArtists}
+          onSelectFavoriteArtist={openFavoriteArtist}
+          onToggleFavoriteArtist={toggleFavoriteArtist}
+        />
+      )}
     </div>
   )
 }

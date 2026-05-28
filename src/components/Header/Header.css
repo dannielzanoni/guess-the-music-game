@@ -19,9 +19,12 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  border: 0;
   color: var(--color-title);
+  background: transparent;
   font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .brand-mark {
@@ -37,9 +40,50 @@
 }
 
 .brand-icon {
-  width: 34px;
-  height: 34px;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
   object-fit: contain;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-title);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.nav-button.is-active,
+.nav-button:hover {
+  border-color: var(--color-accent);
+}
+
+.nav-button .pi {
+  color: #facc15;
+}
+
+.nav-button strong {
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #101114;
+  background: var(--color-accent);
+  font-size: 0.78rem;
 }
 
 .icon-button,
@@ -219,6 +263,10 @@
   }
 
   .brand span:last-child {
+    display: none;
+  }
+
+  .nav-button span {
     display: none;
   }
 

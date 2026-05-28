@@ -33,23 +33,28 @@ const getTrackTitle = (track) => track.title_short || track.title
 
 const formatPreviewTime = (seconds) => `${seconds.toFixed(2)}s`
 
-export function Home({ volume }) {
+export function Home({
+  favoriteArtists,
+  initialArtistQuery,
+  onToggleFavoriteArtist,
+  volume,
+}) {
   const audioRef = useRef(null)
   const successAudioRef = useRef(null)
   const playTimeoutRef = useRef(null)
   const previewAnimationRef = useRef(null)
   const lastCelebratedGuessRef = useRef('')
 
-  const [artist, setArtist] = useState('')
+  const [artist, setArtist] = useState(initialArtistQuery?.name ?? '')
   const [artistSuggestions, setArtistSuggestions] = useState([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [suggestionError, setSuggestionError] = useState('')
 
-  const [selectedArtist, setSelectedArtist] = useState(null)
+  const [selectedArtist, setSelectedArtist] = useState(initialArtistQuery ?? null)
   const [tracks, setTracks] = useState([])
   const [roundTrack, setRoundTrack] = useState(null)
   const [usedTrackIds, setUsedTrackIds] = useState([])
-  const [isLoadingTracks, setIsLoadingTracks] = useState(false)
+  const [isLoadingTracks, setIsLoadingTracks] = useState(Boolean(initialArtistQuery?.id))
   const [trackError, setTrackError] = useState('')
 
   const [guess, setGuess] = useState('')
@@ -68,6 +73,9 @@ export function Home({ volume }) {
   const previewDuration = Math.min(1 + attemptsUsed, 1 + MAX_ATTEMPTS)
   const hasFinishedRound = Boolean(correctGuess) || attemptsUsed >= MAX_ATTEMPTS
   const shouldForceGuess = attemptsUsed >= MAX_ATTEMPTS - 1 && !hasFinishedRound
+  const isSelectedArtistFavorite = favoriteArtists.some(
+    (favoriteArtist) => favoriteArtist.id === selectedArtist?.id,
+  )
 
   const guessSuggestions = useMemo(() => {
     if (!isGuessFocused || hasFinishedRound) return []
@@ -323,6 +331,46 @@ export function Home({ volume }) {
   }, [normalizedArtist, shouldShowAutocomplete])
 
   useEffect(() => {
+    if (!initialArtistQuery?.id) return undefined
+
+    const controller = new AbortController()
+
+    const loadFavoriteArtistTracks = async () => {
+      try {
+        const artistTracks = await getArtistTopTracks(
+          initialArtistQuery,
+          controller.signal,
+        )
+        const playableTracks = artistTracks.filter((track) => track.preview)
+
+        if (controller.signal.aborted) return
+
+        setTracks(playableTracks)
+
+        if (playableTracks.length > 0) {
+          setRoundTrack(getRandomTrack(playableTracks))
+        } else {
+          setTrackError('No playable previews found for this artist')
+        }
+      } catch (error) {
+        if (!controller.signal.aborted && error.name !== 'CanceledError') {
+          setTrackError('Could not load songs for this artist')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingTracks(false)
+        }
+      }
+    }
+
+    loadFavoriteArtistTracks()
+
+    return () => {
+      controller.abort()
+    }
+  }, [initialArtistQuery])
+
+  useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100
     }
@@ -436,10 +484,31 @@ export function Home({ volume }) {
       {selectedArtist && (
         <section className="round-panel" aria-label="Guess the selected song">
           <div className="artist-card">
-            <img
-              src={selectedArtist.picture_big || selectedArtist.picture_medium}
-              alt={selectedArtist.name}
-            />
+            <div className="artist-image-frame">
+              <img
+                src={selectedArtist.picture_big || selectedArtist.picture_medium}
+                alt={selectedArtist.name}
+              />
+              <button
+                className={`favorite-toggle ${
+                  isSelectedArtistFavorite ? 'is-favorite' : ''
+                }`}
+                type="button"
+                aria-label={
+                  isSelectedArtistFavorite
+                    ? `Remove ${selectedArtist.name} from favorites`
+                    : `Add ${selectedArtist.name} to favorites`
+                }
+                onClick={() => onToggleFavoriteArtist(selectedArtist)}
+              >
+                <i
+                  className={`pi ${
+                    isSelectedArtistFavorite ? 'pi-star-fill' : 'pi-star'
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
             <h2>{selectedArtist.name}</h2>
           </div>
 
