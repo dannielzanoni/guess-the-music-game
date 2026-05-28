@@ -264,6 +264,10 @@
 }
 
 .extra-second-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   align-self: stretch;
   margin-top: 0;
   padding: 0 18px;

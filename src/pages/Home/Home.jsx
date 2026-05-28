@@ -499,7 +499,8 @@ export function Home({ volume }) {
                     type="button"
                     onClick={handleExtraSecondRequest}
                   >
-                    +1s
+                    <i className="pi pi-plus" aria-hidden="true" />
+                    <span>1s</span>
                   </button>
 
                   {guessSuggestions.length > 0 && (
