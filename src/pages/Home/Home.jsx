@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import confetti from '@hiseb/confetti'
 import { AudioWaveform } from '../../components/AudioWaveform/AudioWaveform'
 import { KeyboardSpaceIcon } from '../../components/icons/KeyboardSpaceIcon'
@@ -7,6 +7,7 @@ import {
   normalizeSearchText,
   searchArtists,
 } from '../../services/api/deezerClient'
+import errorSound from '../../assets/sounds/error_sound.mp3'
 import tadaSound from '../../assets/sounds/tada_sound.mp3'
 import './Home.css'
 
@@ -42,11 +43,13 @@ export function Home({
   volume,
 }) {
   const audioRef = useRef(null)
+  const errorAudioRef = useRef(null)
   const successAudioRef = useRef(null)
   const playButtonRef = useRef(null)
   const playTimeoutRef = useRef(null)
   const previewAnimationRef = useRef(null)
   const lastCelebratedGuessRef = useRef('')
+  const lastFailedRoundRef = useRef(null)
 
   const [artist, setArtist] = useState(initialArtistQuery?.name ?? '')
   const [artistSuggestions, setArtistSuggestions] = useState([])
@@ -232,6 +235,37 @@ export function Home({
     }
   }
 
+  const playEffectSound = useCallback((audioElement, audioSrc, label) => {
+    if (effectsMuted) return
+
+    const soundVolume = Math.max(volume / 100, 0.2)
+    const effectAudio = audioElement ?? new Audio(audioSrc)
+
+    effectAudio.pause()
+    effectAudio.currentTime = 0
+    effectAudio.muted = false
+    effectAudio.volume = soundVolume
+
+    effectAudio.play().catch((error) => {
+      console.warn(`Could not play ${label} sound with preloaded audio`, error)
+
+      const fallbackAudio = new Audio(audioSrc)
+      fallbackAudio.muted = false
+      fallbackAudio.volume = soundVolume
+      fallbackAudio.play().catch((fallbackError) => {
+        console.warn(`Could not play ${label} sound fallback`, fallbackError)
+      })
+    })
+  }, [effectsMuted, volume])
+
+  const playSuccessSound = useCallback(() => {
+    playEffectSound(successAudioRef.current, tadaSound, 'success')
+  }, [playEffectSound])
+
+  const playErrorSound = useCallback(() => {
+    playEffectSound(errorAudioRef.current, errorSound, 'error')
+  }, [playEffectSound])
+
   const playCorrectAnswerFeedback = () => {
     const centerPosition = {
       x: window.innerWidth / 2,
@@ -256,14 +290,7 @@ export function Home({
       })
     }, 180)
 
-    if (!successAudioRef.current || effectsMuted) return
-
-    successAudioRef.current.pause()
-    successAudioRef.current.currentTime = 0
-    successAudioRef.current.volume = Math.max(volume / 100, 0.2)
-    successAudioRef.current.play().catch((error) => {
-      console.warn('Could not play success sound', error)
-    })
+    playSuccessSound()
   }
 
   const validateGuess = (nextGuess) => {
@@ -425,10 +452,25 @@ export function Home({
   }, [correctGuess])
 
   useEffect(() => {
+    if (
+      !roundTrack ||
+      correctGuess ||
+      attemptsUsed < MAX_ATTEMPTS ||
+      lastFailedRoundRef.current === roundTrack.id
+    ) {
+      return
+    }
+
+    lastFailedRoundRef.current = roundTrack.id
+    playErrorSound()
+  }, [attemptsUsed, correctGuess, playErrorSound, roundTrack])
+
+  useEffect(() => {
     if (!audioRef.current) return
 
     stopPreview()
     audioRef.current.load()
+    lastFailedRoundRef.current = null
   }, [roundTrack])
 
   useEffect(() => {
@@ -454,6 +496,7 @@ export function Home({
 
   return (
     <main className="home-page">
+      <audio ref={errorAudioRef} src={errorSound} preload="auto" />
       <audio ref={successAudioRef} src={tadaSound} preload="auto" />
 
       <section className="game-home" aria-labelledby="game-title">
@@ -636,7 +679,7 @@ export function Home({
 
                 {attemptsUsed >= MAX_ATTEMPTS && !correctGuess && (
                   <p className="round-message is-wrong">
-                    The song was: <strong>{getTrackTitle(roundTrack)}</strong>
+                    <strong>The song was: {getTrackTitle(roundTrack)}</strong>
                   </p>
                 )}
 
