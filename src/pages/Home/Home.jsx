@@ -648,7 +648,8 @@ export function Home({
                     type="button"
                     onClick={() => startNewSong()}
                   >
-                    New Song
+                    <i className="pi pi-refresh" aria-hidden="true" />
+                    <span>New Song</span>
                   </button>
                 )}
               </>

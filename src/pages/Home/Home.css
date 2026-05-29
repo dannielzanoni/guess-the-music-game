@@ -324,6 +324,10 @@
 }
 
 .new-song-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   align-self: flex-start;
   margin-top: 14px;
   padding: 0 18px;
