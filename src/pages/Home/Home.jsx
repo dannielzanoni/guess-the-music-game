@@ -269,6 +269,8 @@ export function Home({
   const validateGuess = (nextGuess) => {
     if (!roundTrack || hasFinishedRound || !nextGuess.trim()) return
 
+    setGuess(nextGuess.trim())
+
     const normalizedGuess = normalizeSearchText(nextGuess.trim())
     const normalizedTrackTitle = normalizeSearchText(roundTrack.title)
     const normalizedShortTitle = normalizeSearchText(getTrackTitle(roundTrack))
