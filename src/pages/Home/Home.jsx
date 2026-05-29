@@ -71,7 +71,6 @@ export function Home({
   const [correctGuess, setCorrectGuess] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
   const [previewCurrentTime, setPreviewCurrentTime] = useState(0)
-  const [waveformResetKey, setWaveformResetKey] = useState(0)
 
   const normalizedArtist = artist.trim()
   const isSelectedArtistSearch = selectedArtist?.name === normalizedArtist
@@ -217,7 +216,6 @@ export function Home({
     audioRef.current.volume = volume / 100
     audioRef.current.currentTime = 0
     setPreviewCurrentTime(0)
-    setWaveformResetKey((currentKey) => currentKey + 1)
 
     try {
       await audioRef.current.play()
@@ -610,10 +608,10 @@ export function Home({
                   </strong>
                   <div className="preview-waveform" aria-hidden="true">
                     <AudioWaveform
+                      key={roundTrack.id}
                       audioUrl={roundTrack.preview}
                       currentTime={previewCurrentTime}
                       previewDuration={previewDuration}
-                      resetKey={waveformResetKey}
                     />
                   </div>
                 </div>

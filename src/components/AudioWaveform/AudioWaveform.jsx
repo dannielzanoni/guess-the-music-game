@@ -7,7 +7,7 @@ const fallbackBars = [
   40, 58, 28, 44, 34, 50, 22, 38, 48, 26, 54, 32, 42,
 ]
 
-export function AudioWaveform({ audioUrl, currentTime, previewDuration, resetKey }) {
+export function AudioWaveform({ audioUrl, currentTime, previewDuration }) {
   const containerRef = useRef(null)
   const waveSurferRef = useRef(null)
   const [isReady, setIsReady] = useState(false)
@@ -29,41 +29,58 @@ export function AudioWaveform({ audioUrl, currentTime, previewDuration, resetKey
   useEffect(() => {
     if (!containerRef.current || !audioUrl || isMobileViewport) return undefined
 
+    let animationFrameId = 0
+    let isActive = true
+    let waveSurfer = null
+    const container = containerRef.current
+
     setIsReady(false)
     setHasWaveformError(false)
+    container.replaceChildren()
 
-    const waveSurfer = WaveSurfer.create({
-      container: containerRef.current,
-      height: 56,
-      waveColor: 'rgba(167, 173, 183, 0.48)',
-      progressColor: '#7dffb2',
-      cursorWidth: 0,
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 3,
-      barMinHeight: 2,
-      minPxPerSec: 80,
-      normalize: true,
-      fillParent: true,
-      interact: false,
-      dragToSeek: false,
-      backend: 'MediaElement',
-    })
+    animationFrameId = window.requestAnimationFrame(() => {
+      if (!containerRef.current || !isActive) return
 
-    waveSurferRef.current = waveSurfer
-    waveSurfer.on('ready', () => setIsReady(true))
-    waveSurfer.on('error', () => setHasWaveformError(true))
-    waveSurfer.load(audioUrl).catch((error) => {
-      if (error.name !== 'AbortError') {
-        setHasWaveformError(true)
-      }
+      waveSurfer = WaveSurfer.create({
+        container,
+        height: 56,
+        waveColor: 'rgba(167, 173, 183, 0.48)',
+        progressColor: '#7dffb2',
+        cursorWidth: 0,
+        barWidth: 2,
+        barGap: 1,
+        barRadius: 3,
+        barMinHeight: 2,
+        minPxPerSec: 80,
+        normalize: true,
+        fillParent: true,
+        interact: false,
+        dragToSeek: false,
+        backend: 'MediaElement',
+      })
+
+      waveSurferRef.current = waveSurfer
+      waveSurfer.on('ready', () => {
+        if (isActive) setIsReady(true)
+      })
+      waveSurfer.on('error', () => {
+        if (isActive) setHasWaveformError(true)
+      })
+      waveSurfer.load(audioUrl).catch((error) => {
+        if (isActive && error.name !== 'AbortError') {
+          setHasWaveformError(true)
+        }
+      })
     })
 
     return () => {
-      waveSurfer.destroy()
+      isActive = false
+      window.cancelAnimationFrame(animationFrameId)
+      waveSurfer?.destroy()
       waveSurferRef.current = null
+      container.replaceChildren()
     }
-  }, [audioUrl, resetKey, isMobileViewport])
+  }, [audioUrl, isMobileViewport])
 
   useEffect(() => {
     if (!isReady || !waveSurferRef.current) return
