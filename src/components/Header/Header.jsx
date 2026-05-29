@@ -60,14 +60,7 @@ export function Header({
             aria-expanded={isSettingsOpen}
             onClick={() => setIsSettingsOpen(true)}
           >
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M4 7h10" />
-              <path d="M18 7h2" />
-              <path d="M4 17h2" />
-              <path d="M10 17h10" />
-              <path d="M14 5v4" />
-              <path d="M8 15v4" />
-            </svg>
+            <i className="pi pi-cog" aria-hidden="true" />
           </button>
         </nav>
       </header>
@@ -96,7 +89,7 @@ export function Header({
             aria-label="Close settings"
             onClick={closeSettings}
           >
-            X
+            <i className="pi pi-times" aria-hidden="true" />
           </button>
         </div>
 
