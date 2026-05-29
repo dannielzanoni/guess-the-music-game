@@ -35,6 +35,7 @@ const getTrackTitle = (track) => track.title_short || track.title
 const formatPreviewTime = (seconds) => `${seconds.toFixed(2)}s`
 
 export function Home({
+  effectsMuted,
   favoriteArtists,
   initialArtistQuery,
   onToggleFavoriteArtist,
@@ -255,7 +256,7 @@ export function Home({
       })
     }, 180)
 
-    if (!successAudioRef.current) return
+    if (!successAudioRef.current || effectsMuted) return
 
     successAudioRef.current.pause()
     successAudioRef.current.currentTime = 0
@@ -378,9 +379,9 @@ export function Home({
     }
 
     if (successAudioRef.current) {
-      successAudioRef.current.volume = Math.max(volume / 100, 0.2)
+      successAudioRef.current.volume = effectsMuted ? 0 : Math.max(volume / 100, 0.2)
     }
-  }, [volume])
+  }, [effectsMuted, volume])
 
   useEffect(() => {
     const handleSpacePlay = (event) => {
@@ -633,8 +634,7 @@ export function Home({
 
                 {attemptsUsed >= MAX_ATTEMPTS && !correctGuess && (
                   <p className="round-message is-wrong">
-                    The song was  
-                    <strong>: {getTrackTitle(roundTrack)}</strong>
+                    The song was: <strong>{getTrackTitle(roundTrack)}</strong>
                   </p>
                 )}
 

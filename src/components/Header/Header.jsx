@@ -4,10 +4,12 @@ import './Header.css'
 
 export function Header({
   activePage,
+  effectsMuted,
   favoriteCount,
   theme,
   volume,
   onNavigate,
+  onToggleEffectsMuted,
   onThemeToggle,
   onVolumeChange,
 }) {
@@ -130,6 +132,25 @@ export function Header({
             type="range"
             value={volume}
           />
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <span>Effects sounds</span>
+            <p>{effectsMuted ? 'Mute effects sounds' : 'Enable Sounds'}</p>
+          </div>
+          <button
+            className={`sound-effect-toggle ${effectsMuted ? 'is-muted' : ''}`}
+            type="button"
+            aria-label={effectsMuted ? 'Enable effects sounds' : 'Mute effects sounds'}
+            aria-pressed={!effectsMuted}
+            onClick={onToggleEffectsMuted}
+          >
+            <i
+              className={`pi ${effectsMuted ? 'pi-volume-off' : 'pi-volume-up'}`}
+              aria-hidden="true"
+            />
+          </button>
         </div>
       </aside>
     </>

@@ -7,6 +7,7 @@ import './App.css'
 const STORAGE_KEYS = {
   theme: 'guess-the-music:theme',
   volume: 'guess-the-music:volume',
+  effectsMuted: 'guess-the-music:effects-muted',
   favoriteArtists: 'guess-the-music:favorite-artists',
 }
 
@@ -28,6 +29,9 @@ const getStoredVolume = () => {
   return Math.min(Math.max(storedVolume, 0), 100)
 }
 
+const getStoredEffectsMuted = () =>
+  localStorage.getItem(STORAGE_KEYS.effectsMuted) === 'true'
+
 const getStoredFavoriteArtists = () => {
   try {
     const storedFavorites = JSON.parse(
@@ -43,6 +47,7 @@ const getStoredFavoriteArtists = () => {
 function App() {
   const [theme, setTheme] = useState(getStoredTheme)
   const [volume, setVolume] = useState(getStoredVolume)
+  const [effectsMuted, setEffectsMuted] = useState(getStoredEffectsMuted)
   const [currentPage, setCurrentPage] = useState('home')
   const [favoriteArtists, setFavoriteArtists] = useState(getStoredFavoriteArtists)
   const [selectedFavoriteArtist, setSelectedFavoriteArtist] = useState(null)
@@ -53,6 +58,10 @@ function App() {
 
   const updateVolume = (nextVolume) => {
     setVolume(Math.min(Math.max(nextVolume, 0), 100))
+  }
+
+  const toggleEffectsMuted = () => {
+    setEffectsMuted((currentValue) => !currentValue)
   }
 
   const toggleFavoriteArtist = (artist) => {
@@ -93,6 +102,10 @@ function App() {
   }, [volume])
 
   useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.effectsMuted, String(effectsMuted))
+  }, [effectsMuted])
+
+  useEffect(() => {
     localStorage.setItem(
       STORAGE_KEYS.favoriteArtists,
       JSON.stringify(favoriteArtists),
@@ -103,16 +116,19 @@ function App() {
     <div className="app-root" data-theme={theme}>
       <Header
         activePage={currentPage}
+        effectsMuted={effectsMuted}
         favoriteCount={favoriteArtists.length}
         theme={theme}
         volume={volume}
         onNavigate={setCurrentPage}
+        onToggleEffectsMuted={toggleEffectsMuted}
         onThemeToggle={toggleTheme}
         onVolumeChange={updateVolume}
       />
       {currentPage === 'home' ? (
         <Home
           favoriteArtists={favoriteArtists}
+          effectsMuted={effectsMuted}
           initialArtistQuery={selectedFavoriteArtist}
           onToggleFavoriteArtist={toggleFavoriteArtist}
           volume={volume}
