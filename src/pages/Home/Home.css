@@ -507,4 +507,9 @@
     flex-direction: column;
     gap: 10px;
   }
+
+  .song-status strong {
+    align-self: center;
+    text-align: center;
+  }
 }
