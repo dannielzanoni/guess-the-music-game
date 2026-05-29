@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import confetti from '@hiseb/confetti'
 import { AudioWaveform } from '../../components/AudioWaveform/AudioWaveform'
+import { KeyboardSpaceIcon } from '../../components/icons/KeyboardSpaceIcon'
 import {
   getArtistTopTracks,
   normalizeSearchText,
@@ -41,6 +42,7 @@ export function Home({
 }) {
   const audioRef = useRef(null)
   const successAudioRef = useRef(null)
+  const playButtonRef = useRef(null)
   const playTimeoutRef = useRef(null)
   const previewAnimationRef = useRef(null)
   const lastCelebratedGuessRef = useRef('')
@@ -381,6 +383,33 @@ export function Home({
   }, [volume])
 
   useEffect(() => {
+    const handleSpacePlay = (event) => {
+      const target = event.target
+      const isTypingTarget =
+        target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+
+      if (
+        event.code !== 'Space' ||
+        isTypingTarget ||
+        !roundTrack ||
+        hasFinishedRound
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      playButtonRef.current?.click()
+    }
+
+    window.addEventListener('keydown', handleSpacePlay)
+
+    return () => {
+      window.removeEventListener('keydown', handleSpacePlay)
+    }
+  }, [roundTrack, hasFinishedRound])
+
+  useEffect(() => {
     if (!correctGuess || lastCelebratedGuessRef.current === correctGuess) return
 
     lastCelebratedGuessRef.current = correctGuess
@@ -543,8 +572,16 @@ export function Home({
                   preload="auto"
                 />
 
-                <button className="play-button" type="button" onClick={playPreview}>
-                  {isPlaying ? 'Playing...' : `Play ${previewDuration}s Preview`}
+                <button
+                  className="play-button"
+                  type="button"
+                  ref={playButtonRef}
+                  onClick={playPreview}
+                >
+                  <KeyboardSpaceIcon size={22} />
+                  <span>
+                    {isPlaying ? 'Playing...' : `Play ${previewDuration}s Preview`}
+                  </span>
                 </button>
 
                 <div className="guess-form">

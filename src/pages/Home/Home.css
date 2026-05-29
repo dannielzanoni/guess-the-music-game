@@ -217,6 +217,10 @@
 
 .play-button {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .guess-form {
