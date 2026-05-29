@@ -233,7 +233,8 @@
   padding: 18px;
 }
 
-.setting-stack + .setting-row {
+.setting-stack + .setting-row,
+.setting-row + .setting-row {
   margin-top: 14px;
 }
 

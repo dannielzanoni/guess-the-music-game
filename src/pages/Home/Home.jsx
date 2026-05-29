@@ -40,6 +40,7 @@ export function Home({
   favoriteArtists,
   initialArtistQuery,
   onToggleFavoriteArtist,
+  preventRepeatTracks,
   volume,
 }) {
   const audioRef = useRef(null)
@@ -124,16 +125,20 @@ export function Home({
   const startNewSong = (availableTracks = tracks) => {
     stopPreview()
 
-    const completedTrackIds = roundTrack
+    const completedTrackIds = preventRepeatTracks && roundTrack
       ? [...new Set([...usedTrackIds, roundTrack.id])]
       : usedTrackIds
     const nextTrackOptions = getAvailableTracks(
       availableTracks,
-      completedTrackIds,
+      preventRepeatTracks ? completedTrackIds : [],
       roundTrack?.id,
     )
 
-    setUsedTrackIds(completedTrackIds.length >= availableTracks.length ? [] : completedTrackIds)
+    setUsedTrackIds(
+      preventRepeatTracks && completedTrackIds.length < availableTracks.length
+        ? completedTrackIds
+        : [],
+    )
     setRoundTrack(getRandomTrack(nextTrackOptions))
     setGuess('')
     setWrongGuesses([])
@@ -305,9 +310,12 @@ export function Home({
       normalizedGuess === normalizedTrackTitle || normalizedGuess === normalizedShortTitle
 
     if (isCorrectGuess) {
-      setUsedTrackIds((currentTrackIds) => [
-        ...new Set([...currentTrackIds, roundTrack.id]),
-      ])
+      if (preventRepeatTracks) {
+        setUsedTrackIds((currentTrackIds) => [
+          ...new Set([...currentTrackIds, roundTrack.id]),
+        ])
+      }
+
       setCorrectGuess(getTrackTitle(roundTrack))
       setIsGuessFocused(false)
       stopPreview()

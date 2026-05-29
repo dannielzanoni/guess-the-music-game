@@ -6,10 +6,12 @@ export function Header({
   activePage,
   effectsMuted,
   favoriteCount,
+  preventRepeatTracks,
   theme,
   volume,
   onNavigate,
   onToggleEffectsMuted,
+  onTogglePreventRepeatTracks,
   onThemeToggle,
   onVolumeChange,
 }) {
@@ -143,6 +145,22 @@ export function Header({
               className={`pi ${effectsMuted ? 'pi-volume-off' : 'pi-volume-up'}`}
               aria-hidden="true"
             />
+          </button>
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <span>Do not repeat songs from the same Band/Artist</span>
+            <p>{preventRepeatTracks ? 'Enabled for this session' : 'Disabled'}</p>
+          </div>
+          <button
+            className={`toggle ${preventRepeatTracks ? 'is-active' : ''}`}
+            type="button"
+            aria-label="Toggle repeated songs from the same Band or Artist"
+            aria-pressed={preventRepeatTracks}
+            onClick={onTogglePreventRepeatTracks}
+          >
+            <span />
           </button>
         </div>
       </aside>

@@ -48,6 +48,7 @@ function App() {
   const [theme, setTheme] = useState(getStoredTheme)
   const [volume, setVolume] = useState(getStoredVolume)
   const [effectsMuted, setEffectsMuted] = useState(getStoredEffectsMuted)
+  const [preventRepeatTracks, setPreventRepeatTracks] = useState(true)
   const [currentPage, setCurrentPage] = useState('home')
   const [favoriteArtists, setFavoriteArtists] = useState(getStoredFavoriteArtists)
   const [selectedFavoriteArtist, setSelectedFavoriteArtist] = useState(null)
@@ -62,6 +63,10 @@ function App() {
 
   const toggleEffectsMuted = () => {
     setEffectsMuted((currentValue) => !currentValue)
+  }
+
+  const togglePreventRepeatTracks = () => {
+    setPreventRepeatTracks((currentValue) => !currentValue)
   }
 
   const toggleFavoriteArtist = (artist) => {
@@ -118,10 +123,12 @@ function App() {
         activePage={currentPage}
         effectsMuted={effectsMuted}
         favoriteCount={favoriteArtists.length}
+        preventRepeatTracks={preventRepeatTracks}
         theme={theme}
         volume={volume}
         onNavigate={setCurrentPage}
         onToggleEffectsMuted={toggleEffectsMuted}
+        onTogglePreventRepeatTracks={togglePreventRepeatTracks}
         onThemeToggle={toggleTheme}
         onVolumeChange={updateVolume}
       />
@@ -131,6 +138,7 @@ function App() {
           effectsMuted={effectsMuted}
           initialArtistQuery={selectedFavoriteArtist}
           onToggleFavoriteArtist={toggleFavoriteArtist}
+          preventRepeatTracks={preventRepeatTracks}
           volume={volume}
         />
       ) : (
