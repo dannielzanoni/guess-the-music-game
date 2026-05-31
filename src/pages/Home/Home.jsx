@@ -15,6 +15,13 @@ const MAX_ATTEMPTS = 5
 
 const getRandomTrack = (tracks) => tracks[Math.floor(Math.random() * tracks.length)]
 
+const getAlbumCover = (track) =>
+  track?.album?.cover_big ||
+  track?.album?.cover_medium ||
+  track?.album?.cover ||
+  track?.album?.cover_small ||
+  ''
+
 const getAvailableTracks = (tracks, usedTrackIds, currentTrackId) => {
   const blockedTrackIds = new Set(usedTrackIds)
 
@@ -35,6 +42,14 @@ const getTrackTitle = (track) => track.title_short || track.title
 
 const formatPreviewTime = (seconds) => `${seconds.toFixed(2)}s`
 
+const formatPlayerTime = (seconds) => {
+  const safeSeconds = Math.max(Math.floor(seconds), 0)
+  const minutes = Math.floor(safeSeconds / 60)
+  const remainingSeconds = safeSeconds % 60
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
 export function Home({
   effectsMuted,
   favoriteArtists,
@@ -44,6 +59,7 @@ export function Home({
   volume,
 }) {
   const audioRef = useRef(null)
+  const answerAudioRef = useRef(null)
   const errorAudioRef = useRef(null)
   const successAudioRef = useRef(null)
   const playButtonRef = useRef(null)
@@ -71,13 +87,21 @@ export function Home({
   const [correctGuess, setCorrectGuess] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
   const [previewCurrentTime, setPreviewCurrentTime] = useState(0)
+  const [answerStartTime, setAnswerStartTime] = useState(0)
+  const [answerCurrentTime, setAnswerCurrentTime] = useState(0)
+  const [answerDuration, setAnswerDuration] = useState(0)
+  const [isAnswerPlaying, setIsAnswerPlaying] = useState(false)
 
   const normalizedArtist = artist.trim()
   const isSelectedArtistSearch = selectedArtist?.name === normalizedArtist
   const shouldShowAutocomplete = normalizedArtist.length >= 2 && !isSelectedArtistSearch
   const attemptsUsed = wrongGuesses.length + extraSecondRequests.length
   const previewDuration = Math.min(1 + attemptsUsed, 1 + MAX_ATTEMPTS)
+  const answerProgress = answerDuration > 0
+    ? Math.min((answerCurrentTime / answerDuration) * 100, 100)
+    : 0
   const hasFinishedRound = Boolean(correctGuess) || attemptsUsed >= MAX_ATTEMPTS
+  const shouldShowAnswerCard = Boolean(roundTrack) && hasFinishedRound
   const shouldForceGuess = attemptsUsed >= MAX_ATTEMPTS - 1 && !hasFinishedRound
   const isSelectedArtistFavorite = favoriteArtists.some(
     (favoriteArtist) => favoriteArtist.id === selectedArtist?.id,
@@ -114,6 +138,18 @@ export function Home({
     setIsPlaying(false)
   }
 
+  const resetAnswerPlayer = () => {
+    if (answerAudioRef.current) {
+      answerAudioRef.current.pause()
+      answerAudioRef.current.currentTime = 0
+    }
+
+    setAnswerStartTime(0)
+    setAnswerCurrentTime(0)
+    setAnswerDuration(0)
+    setIsAnswerPlaying(false)
+  }
+
   const syncPreviewTime = () => {
     if (!audioRef.current || audioRef.current.paused) return
 
@@ -143,6 +179,7 @@ export function Home({
     setWrongGuesses([])
     setExtraSecondRequests([])
     setCorrectGuess('')
+    resetAnswerPlayer()
     setIsGuessFocused(false)
   }
 
@@ -162,6 +199,7 @@ export function Home({
       setWrongGuesses([])
       setExtraSecondRequests([])
       setCorrectGuess('')
+      resetAnswerPlayer()
     }
 
     if (nextArtist.trim().length < 2) {
@@ -186,6 +224,7 @@ export function Home({
     setExtraSecondRequests([])
     setCorrectGuess('')
     setGuess('')
+    resetAnswerPlayer()
     stopPreview()
 
     try {
@@ -209,7 +248,7 @@ export function Home({
   }
 
   const playPreview = async () => {
-    if (!audioRef.current || !roundTrack?.preview) return
+    if (!audioRef.current || !roundTrack?.preview || shouldShowAnswerCard) return
 
     stopPreview()
 
@@ -314,6 +353,7 @@ export function Home({
         ])
       }
 
+      setAnswerStartTime(previewDuration)
       setCorrectGuess(getTrackTitle(roundTrack))
       setIsGuessFocused(false)
       stopPreview()
@@ -335,6 +375,53 @@ export function Home({
       ...currentRequests,
       currentRequests.length + 1,
     ])
+  }
+
+  const handleAnswerLoadedMetadata = () => {
+    const audio = answerAudioRef.current
+
+    if (!audio) return
+
+    const duration = Number.isFinite(audio.duration) ? audio.duration : 0
+    const startTime = duration > 0
+      ? Math.min(answerStartTime, Math.max(duration - 0.1, 0))
+      : answerStartTime
+
+    audio.currentTime = startTime
+    setAnswerDuration(duration)
+    setAnswerCurrentTime(startTime)
+  }
+
+  const handleAnswerTimeUpdate = () => {
+    const audio = answerAudioRef.current
+
+    if (!audio) return
+
+    setAnswerCurrentTime(audio.currentTime)
+    setAnswerDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
+  }
+
+  const toggleAnswerPlayer = async () => {
+    const audio = answerAudioRef.current
+
+    if (!audio) return
+
+    audio.volume = volume / 100
+
+    if (!audio.paused) {
+      audio.pause()
+      setIsAnswerPlaying(false)
+      return
+    }
+
+    stopPreview()
+
+    try {
+      await audio.play()
+      setIsAnswerPlaying(true)
+    } catch {
+      setIsAnswerPlaying(false)
+    }
   }
 
   useEffect(() => {
@@ -413,10 +500,30 @@ export function Home({
       audioRef.current.volume = volume / 100
     }
 
+    if (answerAudioRef.current) {
+      answerAudioRef.current.volume = volume / 100
+    }
+
     if (successAudioRef.current) {
       successAudioRef.current.volume = effectsMuted ? 0 : Math.max(volume / 100, 0.2)
     }
   }, [effectsMuted, volume])
+
+  useEffect(() => {
+    if (!shouldShowAnswerCard || !answerAudioRef.current || answerStartTime <= 0) return
+
+    const audio = answerAudioRef.current
+    const duration = Number.isFinite(audio.duration) ? audio.duration : answerDuration
+    const startTime = duration > 0
+      ? Math.min(answerStartTime, Math.max(duration - 0.1, 0))
+      : answerStartTime
+
+    audio.pause()
+    audio.currentTime = startTime
+    setAnswerCurrentTime(startTime)
+    setIsAnswerPlaying(false)
+    stopPreview()
+  }, [answerDuration, answerStartTime, shouldShowAnswerCard])
 
   useEffect(() => {
     const handleSpacePlay = (event) => {
@@ -468,8 +575,9 @@ export function Home({
     }
 
     lastFailedRoundRef.current = roundTrack.id
+    setAnswerStartTime(previewDuration)
     playErrorSound()
-  }, [attemptsUsed, correctGuess, playErrorSound, roundTrack])
+  }, [attemptsUsed, correctGuess, playErrorSound, previewDuration, roundTrack])
 
   useEffect(() => {
     if (!audioRef.current) return
@@ -498,7 +606,10 @@ export function Home({
     }
   }, [])
 
-  useEffect(() => () => stopPreview(), [])
+  useEffect(() => () => {
+    stopPreview()
+    resetAnswerPlayer()
+  }, [])
 
   return (
     <main className="home-page">
@@ -628,11 +739,16 @@ export function Home({
                   className="play-button"
                   type="button"
                   ref={playButtonRef}
+                  disabled={shouldShowAnswerCard}
                   onClick={playPreview}
                 >
                   <KeyboardSpaceIcon size={22} />
                   <span>
-                    {isPlaying ? 'Playing...' : `Play ${previewDuration}s Preview`}
+                    {shouldShowAnswerCard
+                      ? 'Preview locked'
+                      : isPlaying
+                        ? 'Playing...'
+                        : `Play ${previewDuration}s Preview`}
                   </span>
                 </button>
 
@@ -748,6 +864,65 @@ export function Home({
               )}
             </ol>
           </div>
+
+          {shouldShowAnswerCard && roundTrack && (
+            <article
+              className="answer-album-card"
+              aria-label={`Album information for ${getTrackTitle(roundTrack)}`}
+            >
+              {getAlbumCover(roundTrack) ? (
+                <img
+                  src={getAlbumCover(roundTrack)}
+                  alt={roundTrack.album?.title || getTrackTitle(roundTrack)}
+                />
+              ) : (
+                <div className="answer-album-fallback" aria-hidden="true">
+                  <i className="pi pi-volume-up" />
+                </div>
+              )}
+              <div className="answer-album-copy">
+                {roundTrack.album?.title && (
+                  <span className="answer-album-title">
+                    {roundTrack.album.title}
+                  </span>
+                )}
+                <strong>{getTrackTitle(roundTrack)}</strong>
+                <span>{roundTrack.artist?.name || selectedArtist.name}</span>
+              </div>
+              <div className="answer-mini-player">
+                <audio
+                  ref={answerAudioRef}
+                  src={roundTrack.preview}
+                  onEnded={() => setIsAnswerPlaying(false)}
+                  onLoadedMetadata={handleAnswerLoadedMetadata}
+                  onTimeUpdate={handleAnswerTimeUpdate}
+                  preload="auto"
+                />
+                <div className="answer-mini-player-row">
+                  <button
+                    className="answer-mini-player-button"
+                    type="button"
+                    aria-label={isAnswerPlaying ? 'Pause song preview' : 'Play song preview'}
+                    onClick={toggleAnswerPlayer}
+                  >
+                    <i
+                      className={`pi ${isAnswerPlaying ? 'pi-pause' : 'pi-chevron-right'}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+                <div
+                  className="answer-mini-player-progress"
+                  aria-hidden="true"
+                  style={{ '--answer-progress': `${answerProgress}%` }}
+                />
+                <div className="answer-mini-player-meta">
+                  <span>{formatPlayerTime(answerCurrentTime)}</span>
+                  <span>{formatPlayerTime(answerDuration || answerStartTime)}</span>
+                </div>
+              </div>
+            </article>
+          )}
         </section>
       )}
     </main>
