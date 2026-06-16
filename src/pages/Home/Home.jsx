@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import confetti from '@hiseb/confetti'
 import { AudioWaveform } from '../../components/AudioWaveform/AudioWaveform'
 import { KeyboardSpaceIcon } from '../../components/icons/KeyboardSpaceIcon'
+import { Disc3Icon } from '../../components/ui/disc-3'
 import {
   getArtistTopTracks,
   normalizeSearchText,
@@ -60,6 +61,7 @@ export function Home({
 }) {
   const audioRef = useRef(null)
   const answerAudioRef = useRef(null)
+  const playingIconRef = useRef(null)
   const errorAudioRef = useRef(null)
   const successAudioRef = useRef(null)
   const playButtonRef = useRef(null)
@@ -339,6 +341,7 @@ export function Home({
     if (!roundTrack || hasFinishedRound || !nextGuess.trim()) return
 
     setGuess(nextGuess.trim())
+    setIsGuessFocused(false)
 
     const normalizedGuess = normalizeSearchText(nextGuess.trim())
     const normalizedTrackTitle = normalizeSearchText(roundTrack.title)
@@ -355,7 +358,6 @@ export function Home({
 
       setAnswerStartTime(previewDuration)
       setCorrectGuess(getTrackTitle(roundTrack))
-      setIsGuessFocused(false)
       stopPreview()
       playCorrectAnswerFeedback()
       return
@@ -508,6 +510,14 @@ export function Home({
       successAudioRef.current.volume = effectsMuted ? 0 : Math.max(volume / 100, 0.2)
     }
   }, [effectsMuted, volume])
+
+  useEffect(() => {
+    if (isPlaying) {
+      playingIconRef.current?.startAnimation()
+    } else {
+      playingIconRef.current?.stopAnimation()
+    }
+  }, [isPlaying])
 
   useEffect(() => {
     if (!shouldShowAnswerCard || !answerAudioRef.current || answerStartTime <= 0) return
@@ -742,7 +752,15 @@ export function Home({
                   disabled={shouldShowAnswerCard}
                   onClick={playPreview}
                 >
-                  <KeyboardSpaceIcon size={22} />
+                  {isPlaying ? (
+                    <Disc3Icon
+                      ref={playingIconRef}
+                      className="play-button-playing-icon"
+                      size={22}
+                    />
+                  ) : (
+                    <KeyboardSpaceIcon size={22} />
+                  )}
                   <span>
                     {shouldShowAnswerCard
                       ? 'Preview locked'
@@ -761,7 +779,10 @@ export function Home({
                     value={guess}
                     disabled={hasFinishedRound}
                     onBlur={() => window.setTimeout(() => setIsGuessFocused(false), 120)}
-                    onChange={(event) => setGuess(event.target.value)}
+                    onChange={(event) => {
+                      setGuess(event.target.value)
+                      setIsGuessFocused(true)
+                    }}
                     onFocus={() => setIsGuessFocused(true)}
                     placeholder="Guess the song"
                     type="search"
@@ -805,10 +826,6 @@ export function Home({
                   </p>
                 )}
 
-                {correctGuess && (
-                  <p className="round-message is-correct">Correct answer!</p>
-                )}
-
                 {hasFinishedRound && (
                   <button
                     className="new-song-button"
@@ -846,23 +863,28 @@ export function Home({
                 })}
               </div>
             </div>
-            <ol className="attempt-list" aria-live="polite">
-              {wrongGuesses.map((wrongGuess, index) => (
-                <li className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
-                  <span>{wrongGuess}</span>
-                </li>
-              ))}
+            <div className="attempt-panel">
+              <ol className="attempt-list" aria-live="polite">
+                {wrongGuesses.map((wrongGuess, index) => (
+                  <li className="attempt-label is-wrong" key={`${wrongGuess}-${index}`}>
+                    <span>{wrongGuess}</span>
+                  </li>
+                ))}
 
-              {correctGuess && (
-                <li className="attempt-label is-correct">
-                  <span>{correctGuess}</span>
-                </li>
-              )}
+                {correctGuess && (
+                  <li className="attempt-label is-correct">
+                    <span>{correctGuess}</span>
+                  </li>
+                )}
 
-              {wrongGuesses.length === 0 && !correctGuess && (
-                <li className="attempt-empty">No guesses yet</li>
-              )}
-            </ol>
+                {wrongGuesses.length === 0 && !correctGuess && (
+                  <li className="attempt-empty">
+                    <i className="pi pi-music" aria-hidden="true" />
+                    <span>No guesses yet</span>
+                  </li>
+                )}
+              </ol>
+            </div>
           </div>
 
           {shouldShowAnswerCard && roundTrack && (
