@@ -24,7 +24,7 @@ const getArtistMatchScore = (artistName, query) => {
 }
 
 export async function searchArtists(query, signal) {
-  const response = await deezerClient.get('/search', {
+  const response = await deezerClient.get('', {
     params: { q: query },
     signal,
   })
@@ -73,7 +73,7 @@ export async function searchArtists(query, signal) {
 }
 
 export async function getArtistTopTracks(artist, signal) {
-  const response = await deezerClient.get('/search', {
+  const response = await deezerClient.get('', {
     params: { q: artist.name },
     signal,
   })
