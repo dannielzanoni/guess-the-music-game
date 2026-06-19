@@ -1,15 +1,7 @@
 import axios from 'axios'
 
 export const deezerClient = axios.create({
-  baseURL:
-    import.meta.env.VITE_DEEZER_API_URL ??
-    'https://deezerdevs-deezer.p.rapidapi.com',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-rapidapi-host':
-      import.meta.env.VITE_DEEZER_API_HOST ?? 'deezerdevs-deezer.p.rapidapi.com',
-    'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY,
-  },
+  baseURL: '/api/deezer',
 })
 
 export const normalizeSearchText = (value) =>
