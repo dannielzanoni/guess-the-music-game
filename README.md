@@ -1,24 +1,24 @@
 # Guess the Music Game
 
-Aplicacao React + Vite para um jogo de adivinhar musicas.
+React + Vite application for a music guessing game.
 
-## Stack inicial
+## Initial Stack
 
 - React
 - Vite
 - Axios
-- CSS responsivo
+- Responsive CSS
 
-## Como rodar
+## How to Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-O projeto roda por padrao em `http://localhost:5173`.
+The project runs by default at `http://localhost:5173`.
 
-Para rodar com a API serverless localmente, use o Vercel CLI:
+To run with the serverless API locally, use the Vercel CLI:
 
 ```bash
 npx vercel dev
@@ -35,9 +35,9 @@ npm run preview
 
 ## Deezer API
 
-O frontend chama o proxy serverless em `/api/deezer`. A chave do RapidAPI fica apenas no ambiente serverless, nunca no bundle do navegador.
+The frontend calls the serverless proxy at `/api/deezer`. The RapidAPI key stays only in the serverless environment, never in the browser bundle.
 
-Para configurar, crie um `.env.local` a partir de `.env.example` ou adicione as variaveis no painel da Vercel:
+To configure it, create a `.env.local` file from `.env.example` or add the variables in the Vercel dashboard:
 
 ```txt
 DEEZER_API_URL=https://deezerdevs-deezer.p.rapidapi.com
@@ -45,4 +45,4 @@ DEEZER_API_HOST=deezerdevs-deezer.p.rapidapi.com
 RAPIDAPI_KEY=your_rapidapi_key_here
 ```
 
-Nao use `VITE_RAPIDAPI_KEY`: variaveis com prefixo `VITE_` sao publicadas no JavaScript do frontend.
+Do not use `VITE_RAPIDAPI_KEY`: variables with the `VITE_` prefix are published in the frontend JavaScript.

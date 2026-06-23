@@ -10,7 +10,7 @@ export function Favorites({
       <section className="favorites-panel" aria-labelledby="favorites-title">
         <div>
           <h1 id="favorites-title">Favorite Artists</h1>
-          <p>Pick an artist to start a new search from the home page.</p>
+          <p>Pick an artist to start a new game.</p>
         </div>
 
         {favoriteArtists.length > 0 ? (

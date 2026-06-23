@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import confetti from '@hiseb/confetti'
 import { AudioWaveform } from '../../components/AudioWaveform/AudioWaveform'
 import { KeyboardSpaceIcon } from '../../components/icons/KeyboardSpaceIcon'
+import { AuroraText } from '../../components/ui/aurora-text'
 import { Disc3Icon } from '../../components/ui/disc-3'
 import {
   getArtistTopTracks,
@@ -627,7 +628,9 @@ export function Home({
       <audio ref={successAudioRef} src={tadaSound} preload="auto" />
 
       <section className="game-home" aria-labelledby="game-title">
-        <h1 id="game-title">Guess the Music</h1>
+        <h1 id="game-title">
+          Guess the <AuroraText>Music</AuroraText>
+        </h1>
         <p className="game-subtitle">
           Search for a band or artist to start a round and test your music memory.
         </p>
