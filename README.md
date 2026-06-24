@@ -2,6 +2,28 @@
 
 React + Vite application for a music guessing game.
 
+## Prints
+
+### print1.jpg
+
+![print1.jpg](src/assets/docs/print1.jpg)
+
+### print2.jpg
+
+![print2.jpg](src/assets/docs/print2.jpg)
+
+### print3.jpg
+
+![print3.jpg](src/assets/docs/print3.jpg)
+
+### print4.jpg
+
+![print4.jpg](src/assets/docs/print4.jpg)
+
+### print5_mobile.jpg
+
+![print5_mobile.jpg](src/assets/docs/print5_mobile.jpg)
+
 ## Initial Stack
 
 - React
