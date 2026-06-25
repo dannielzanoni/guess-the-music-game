@@ -2,28 +2,6 @@
 
 React + Vite application for a music guessing game.
 
-## Prints
-
-### print1.jpg
-
-![print1.jpg](src/assets/docs/print1.jpg)
-
-### print2.jpg
-
-![print2.jpg](src/assets/docs/print2.jpg)
-
-### print3.jpg
-
-![print3.jpg](src/assets/docs/print3.jpg)
-
-### print4.jpg
-
-![print4.jpg](src/assets/docs/print4.jpg)
-
-### print5_mobile.jpg
-
-![print5_mobile.jpg](src/assets/docs/print5_mobile.jpg)
-
 ## Initial Stack
 
 - React
@@ -45,6 +23,18 @@ To run with the serverless API locally, use the Vercel CLI:
 ```bash
 npx vercel dev
 ```
+
+## Prints
+
+![print1](src/assets/docs/print1.jpg)
+
+![print2](src/assets/docs/print2.jpg)
+
+![print3](src/assets/docs/print3.jpg)
+
+![print4](src/assets/docs/print4.jpg)
+
+![print5 mobile](src/assets/docs/print5_mobile.jpg)
 
 ## Scripts
 
