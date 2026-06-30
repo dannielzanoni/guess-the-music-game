@@ -34,8 +34,6 @@ npx vercel dev
 
 ![print4](src/assets/docs/print4.jpg)
 
-![print5 mobile](src/assets/docs/print_mobile.png)
-
 ## Scripts
 
 ```bash
