@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import gtmIcon from '../../assets/icons/icon-gtm.png'
+import gtmIcon from '../../assets/icons/sound-waves.png'
 import './Header.css'
 
 export function Header({
@@ -37,7 +37,6 @@ export function Header({
           onClick={() => onNavigate('home')}
         >
           <span className="brand-mark" aria-hidden="true">
-            GTM
             <img className="brand-icon" src={gtmIcon} alt="" aria-hidden="true" />
           </span>
           <span>Guess the Music</span>

@@ -34,15 +34,14 @@
   place-items: center;
   border-radius: 8px;
   color: #101114;
-  background: var(--color-accent);
+  
   font-size: 0.82rem;
   letter-spacing: 0;
 }
 
 .brand-icon {
-  width: 20px;
-  height: 20px;
-  margin-top: -7px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
